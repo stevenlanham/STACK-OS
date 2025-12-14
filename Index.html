@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <meta name="color-scheme" content="dark" />
+  <title>Stack</title>
+
+  <style>
+    :root{
+      --bg:#0b0f14; --panel:#0f1620; --panel2:#0c121a; --line:#223042;
+      --text:#e8eef7; --muted:#9fb0c6; --faint:#6f8199;
+      --accent:#7dd3fc; --accent2:#a78bfa; --good:#34d399; --warn:#fbbf24; --bad:#fb7185;
+      --shadow: 0 10px 30px rgba(0,0,0,.45);
+      --r:16px;
+      --tap: 56px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background: radial-gradient(1200px 900px at 20% -10%, rgba(167,139,250,.18), transparent 60%),
+                  radial-gradient(1200px 900px at 90% 10%, rgba(125,211,252,.16), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      font-family:var(--font);
+      letter-spacing:.2px;
+    }
+
+    .wrap{
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 14px 14px 90px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 10px 12px;
+      border:1px solid rgba(255,255,255,.06);
+      background: rgba(15,22,32,.72);
+      backdrop-filter: blur(10px);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 10px;
+      z-index: 10;
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      line-height:1.1;
+    }
+    .brand .title{font-size:18px; font-weight:700}
+    .brand .sub{font-size:12px; color:var(--muted); margin-top:4px}
+
+    .pill{
+      display:flex; align-items:center; gap:8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(12,18,26,.85);
+      border:1px solid rgba(255,255,255,.06);
+      color: var(--muted);
+      font-size: 12px;
+      user-select:none;
+      white-space:nowrap;
+    }
+
+    .grid{
+      display:grid;
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(15,22,32,.90), rgba(12,18,26,.90));
+      border:1px solid rgba(255,255,255,.06);
+      border-radius: var(--r);
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h2{
+      margin:0;
+      font-size: 14px;
+      letter-spacing:.6px;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .row{display:flex; gap:10px; align-items:center}
+    .space{justify-content:space-between}
+    .mt8{margin-top:8px}
+    .mt10{margin-top:10px}
+    .mt12{margin-top:12px}
+    .mt14{margin-top:14px}
+    .muted{color:var(--muted)}
+    .faint{color:var(--faint)}
+    .small{font-size:12px}
+    .tiny{font-size:11px}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+
+    /* Bottom Nav */
+    .nav{
+      position: fixed;
+      left:0; right:0; bottom:0;
+      background: rgba(10,14,20,.75);
+      border-top:1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(12px);
+      padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+      z-index: 20;
+    }
+    .nav .bar{
+      max-width: 520px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:8px;
+    }
+    .tab{
+      height: var(--tap);
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(15,22,32,.70);
+      color: var(--muted);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      cursor:pointer;
+    }
+    .tab .ico{font-size:16px; line-height:1}
+    .tab .lbl{font-size:11px; line-height:1; letter-spacing:.2px}
+    .tab.active{
+      color: var(--text);
+      border-color: rgba(125,211,252,.45);
+      background: rgba(15,22,32,.92);
+      box-shadow: 0 0 0 1px rgba(125,211,252,.25) inset;
+    }
+
+    /* Sections */
+    .section{display:none}
+    .section.active{display:block}
+
+    /* Focus dots */
+    .dots{display:flex; gap:10px; align-items:center}
+    .dot{
+      width: 14px; height: 14px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.04);
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .dot.on{background: rgba(125,211,252,.9); border-color: rgba(125,211,252,.95)}
+    .dot.purple.on{background: rgba(167,139,250,.95); border-color: rgba(167,139,250,.95)}
+    .dot.green.on{background: rgba(52,211,153,.95); border-color: rgba(52,211,153,.95)}
+
+    /* Checklist */
+    .list{margin-top:10px; display:flex; flex-direction:column; gap:8px}
+    .item{
+      display:flex; align-items:center; gap:10px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      background: rgba(12,18,26,.75);
+      border:1px solid rgba(255,255,255,.06);
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .box{
+      width: 18px; height: 18px; border-radius:6px;
+      border:1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.04);
+      flex: 0 0 auto;
+      position: relative;
+    }
+    .item.done .box{
+      border-color: rgba(52,211,153,.8);
+      background: rgba(52,211,153,.18);
+    }
+    .item.done .box:after{
+      content:"";
+      position:absolute;
+      left:5px; top:2px;
+      width:5px; height:10px;
+      border: 2px solid rgba(52,211,153,1);
+      border-top:0; border-left:0;
+      transform: rotate(45deg);
+    }
+    .txt{flex:1; font-size:13px}
+    .item.done .txt{
+      color: rgba(232,238,247,.55);
+      text-decoration: line-through;
+      text-decoration-thickness: 2px;
+    }
+
+    /* Cards inside */
+    .mini{
+      padding:12px;
+      border-radius:14px;
+      background: rgba(12,18,26,.65);
+      border:1px solid rgba(255,255,255,.06);
+    }
+
+    /* Modal */
+    .modal{
+      position: fixed;
+      inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
+      z-index: 50;
+    }
+    .modal.on{display:flex}
+    .sheet{
+      width:min(520px, 100%);
+      max-height: 80vh;
+      overflow:auto;
+      background: rgba(15,22,32,.96);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+    .sheet .head{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      position: sticky; top:0;
+      background: rgba(15,22,32,.96);
+      padding-bottom: 10px;
+    }
+    .btn{
+      height: 40px;
+      padding: 0 12px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(12,18,26,.85);
+      color: var(--text);
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active{transform: translateY(1px)}
+    .btn.ghost{color:var(--muted)}
+    .tag{
+      font-size:11px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(12,18,26,.75);
+      color: var(--muted);
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    textarea{
+      width:100%;
+      min-height: 120px;
+      resize: vertical;
+      border-radius: 14px;
+      padding: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(12,18,26,.70);
+      color: var(--text);
+      outline:none;
+      font-family: var(--font);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .kpi{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-top:10px;
+    }
+    .kpi .mini strong{display:block; font-size:14px; margin-top:4px}
+    .kpi .mini span{display:block; font-size:11px; color:var(--muted)}
+
+    .divider{
+      height:1px;
+      background: rgba(255,255,255,.08);
+      margin: 12px 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="title">Stack</div>
+        <div class="sub" id="stamp">Loading…</div>
+      </div>
+      <div class="pill"><span class="mono" id="mode">Human</span> · <span id="laneHint">present</span></div>
+    </div>
+
+    <!-- TODAY -->
+    <section class="section active" id="sec-today" data-sec="today">
+      <div class="grid">
+
+        <div class="card">
+          <div class="row space">
+            <h2>Today’s Focus</h2>
+            <div class="dots" title="Tap dots to toggle">
+              <div class="dot on" data-dot="work"></div>
+              <div class="dot purple" data-dot="home"></div>
+              <div class="dot green" data-dot="body"></div>
+            </div>
+          </div>
+
+          <div class="mt10 small muted">
+            Work · Home · Body — toggle what’s “hot” today. (Dots persist only while page is open. Storage comes later.)
+          </div>
+
+          <div class="list" id="todayList">
+            <!-- JS fills -->
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="row space">
+            <h2>Quick Scan</h2>
+            <span class="tag">🧠 presence > instructions</span>
+          </div>
+
+          <div class="mt10 mini">
+            <div class="small muted">One-line check</div>
+            <div class="mt8" id="oneLine">
+              Hold the room. Don’t sprint your brain into the ground.
+            </div>
+            <div class="mt10 tiny faint">
+              If you want a “first-day checklist” block next week, say: <span class="mono">Go tactical</span>.
+            </div>
+          </div>
+
+          <div class="kpi">
+            <div class="mini">
+              <span>Work</span>
+              <strong id="kpiWork">—</strong>
+              <span class="tiny">sites / installs / calls</span>
+            </div>
+            <div class="mini">
+              <span>Home</span>
+              <strong id="kpiHome">—</strong>
+              <span class="tiny">family / prep / reset</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="row space">
+            <h2>Rook Debrief</h2>
+            <button class="btn" id="openDebrief">Open</button>
+          </div>
+          <div class="mt10 small muted">
+            Use this when you want to drop a quick “Signal / Drop:” and keep moving.
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- JOBS -->
+    <section class="section" id="sec-jobs" data-sec="jobs">
+      <div class="grid">
+        <div class="card">
+          <div class="row space">
+            <h2>Jobs</h2>
+            <button class="btn" id="addJobBtn">+ Add</button>
+          </div>
+          <div class="mt10 small muted">Tap a job card to open details.</div>
+          <div class="list" id="jobsList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PEOPLE -->
+    <section class="section" id="sec-people" data-sec="people">
+      <div class="grid">
+        <div class="card">
+          <div class="row space">
+            <h2>People</h2>
+            <button class="btn" id="addPersonBtn">+ Add</button>
+          </div>
+          <div class="mt10 small muted">Mentors, leads, customers, “follow up with ___”.</div>
+          <div class="list" id="peopleList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAMILY -->
+    <section class="section" id="sec-family" data-sec="family">
+      <div class="grid">
+        <div class="card">
+          <div class="row space">
+            <h2>Family</h2>
+            <button class="btn" id="addFamilyBtn">+ Add</button>
+          </div>
+          <div class="mt10 small muted">Check-ins, plans, outings, “don’t forget”.</div>
+          <div class="list" id="familyList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MONEY -->
+    <section class="section" id="sec-money" data-sec="money">
+      <div class="grid">
+        <div class="card">
+          <div class="row space">
+            <h2>Money Pulse</h2>
+            <span class="tag">📌 no budget math unless you ask</span>
+          </div>
+
+          <div class="mt10 small muted">
+            This is a pulse board — not a full budget engine. (We keep budget behind your verification step, always.)
+          </div>
+
+          <div class="kpi">
+            <div class="mini">
+              <span>Bonus / Extra</span>
+              <strong id="bonusKpi">$—</strong>
+              <span class="tiny">noted when you tell me</span>
+            </div>
+            <div class="mini">
+              <span>Due Soon</span>
+              <strong id="dueKpi">—</strong>
+              <span class="tiny">car ins end-month</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="mini">
+            <div class="small muted">Note</div>
+            <div class="mt8 small" id="moneyNote">
+              If you drop screenshots, I’ll skim and bullet what matters. No lectures.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODAL / SHEET -->
+    <div class="modal" id="modal">
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="Details">
+        <div class="head">
+          <div>
+            <div class="small muted" id="sheetType">Details</div>
+            <div style="font-size:16px;font-weight:800;margin-top:4px" id="sheetTitle">—</div>
+          </div>
+          <div class="row">
+            <button class="btn ghost" id="closeModal">Close</button>
+          </div>
+        </div>
+
+        <div class="mini mt10" id="sheetMeta">
+          <div class="small muted">Context</div>
+          <div class="mt8 small" id="sheetContext">—</div>
+        </div>
+
+        <div class="mt12">
+          <div class="small muted">Checklist</div>
+          <div class="list" id="sheetChecklist"></div>
+        </div>
+
+        <div class="mt12">
+          <div class="small muted">Notes</div>
+          <textarea id="sheetNotes" placeholder="Type notes here (no storage yet — copy/paste if you need to keep it)."></textarea>
+        </div>
+
+        <div class="mt12">
+          <button class="btn" id="copyNotes">Copy Notes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEBRIEF MODAL -->
+    <div class="modal" id="debriefModal">
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="Rook Debrief">
+        <div class="head">
+          <div>
+            <div class="small muted">Rook Debrief</div>
+            <div style="font-size:16px;font-weight:800;margin-top:4px">Drop / Signal</div>
+          </div>
+          <div class="row">
+            <button class="btn ghost" id="closeDebrief">Close</button>
+          </div>
+        </div>
+
+        <div class="mini mt10">
+          <div class="small muted">How to use</div>
+          <div class="mt8 small">
+            Start with <span class="mono">Drop:</span> (or <span class="mono">Signal:</span>). Optional line: <span class="mono">Vibe:</span>.
+            Then dump it. This is for momentum.
+          </div>
+        </div>
+
+        <div class="mt12">
+          <textarea id="debriefText" placeholder="Drop: ...&#10;Vibe: ..."></textarea>
+        </div>
+
+        <div class="mt12 row space">
+          <button class="btn" id="copyDebrief">Copy</button>
+          <span class="tiny faint">No storage yet.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav">
+    <div class="bar">
+      <div class="tab active" data-go="today" role="button" aria-label="Today">
+        <div class="ico">🎯</div><div class="lbl">Today</div>
+      </div>
+      <div class="tab" data-go="jobs" role="button" aria-label="Jobs">
+        <div class="ico">🧰</div><div class="lbl">Jobs</div>
+      </div>
+      <div class="tab" data-go="people" role="button" aria-label="People">
+        <div class="ico">🤝</div><div class="lbl">People</div>
+      </div>
+      <div class="tab" data-go="family" role="button" aria-label="Family">
+        <div class="ico">🏠</div><div class="lbl">Family</div>
+      </div>
+      <div class="tab" data-go="money" role="button" aria-label="Money Pulse">
+        <div class="ico">📈</div><div class="lbl">Money</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Stack v2.4 (Single-file) — Mechanics first, storage later =====
+
+    const state = {
+      dots: { work:true, home:false, body:false },
+      today: [
+        { id:"t1", text:"Coffee + breakfast. Don’t rush your head.", done:false },
+        { id:"t2", text:"One clean check-in: Steph (seen + supported).", done:false },
+        { id:"t3", text:"Body maintenance: water + 10 min stretch / walk.", done:false },
+        { id:"t4", text:"Work: hold standard, no ego. Presence > speed.", done:false },
+      ],
+      jobs: [
+        { id:"j1", title:"Warren Dairy", context:"Cold, heavy environment. Win with calm sequencing.", checklist:[
+          {id:"c1", text:"Safety + access path (slip / manure / ice)", done:false},
+          {id:"c2", text:"Confirm power + operator behavior", done:false},
+          {id:"c3", text:"Run/adjust + final test", done:false},
+        ]},
+      ],
+      people: [
+        { id:"p1", title:"Vincent", context:"Training invitation. Speak like an equal: calm, clear, accountable.", checklist:[
+          {id:"c1", text:"Ask what “training” means in practice", done:false},
+          {id:"c2", text:"Clarify expectations + timeline", done:false},
+          {id:"c3", text:"Offer a clean coaching system for techs", done:false},
+        ]},
+      ],
+      family: [
+        { id:"f1", title:"Steph", context:"Words + touch. Make her feel seen during the build.", checklist:[
+          {id:"c1", text:"Quick check-in: ‘How are you really?’", done:false},
+          {id:"c2", text:"One small act: hug / help / time", done:false},
+        ]},
+      ],
+      money: { bonus: null }
+    };
+
+    // Utilities
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+    function stamp(){
+      const d = new Date();
+      const opts = { weekday:"short", month:"short", day:"numeric" };
+      const time = d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+      $("#stamp").textContent = `${d.toLocaleDateString([], opts)} · ${time}`;
+    }
+    stamp(); setInterval(stamp, 15000);
+
+    // Tabs (make whole tab clickable)
+    function go(sec){
+      $$(".section").forEach(s => s.classList.toggle("active", s.dataset.sec === sec));
+      $$(".tab").forEach(t => t.classList.toggle("active", t.dataset.go === sec));
+    }
+    $$(".tab").forEach(t => t.addEventListener("click", () => go(t.dataset.go)));
+
+    // Dots
+    $$(".dot").forEach(d => {
+      d.addEventListener("click", () => {
+        const key = d.dataset.dot;
+        state.dots[key] = !state.dots[key];
+        renderDots();
+      });
+    });
+    function renderDots(){
+      $$(".dot").forEach(d => {
+        const key = d.dataset.dot;
+        d.classList.toggle("on", !!state.dots[key]);
+      });
+      const lane = (state.dots.work ? "Work " : "") + (state.dots.home ? "Home " : "") + (state.dots.body ? "Body" : "");
+      $("#laneHint").textContent = lane.trim() || "present";
+    }
+
+    // Today list
+    function renderToday(){
+      const wrap = $("#todayList");
+      wrap.innerHTML = "";
+      state.today.forEach(it => {
+        const el = document.createElement("div");
+        el.className = "item" + (it.done ? " done" : "");
+        el.dataset.id = it.id;
+        el.innerHTML = `<div class="box"></div><div class="txt">${escapeHtml(it.text)}</div>`;
+        el.addEventListener("click", () => {
+          it.done = !it.done;
+          renderToday();
+        });
+        wrap.appendChild(el);
+      });
+
+      // KPI quick fill (simple placeholders)
+      const workCount = state.jobs.length;
+      const homeCount = state.family.length;
+      $("#kpiWork").textContent = `${workCount}`;
+      $("#kpiHome").textContent = `${homeCount}`;
+    }
+
+    // Lists for Jobs / People / Family
+    function renderCards(listKey, mountId, typeLabel){
+      const mount = $(mountId);
+      mount.innerHTML = "";
+      state[listKey].forEach(card => {
+        const el = document.createElement("div");
+        el.className = "item";
+        el.innerHTML = `<div class="box"></div><div class="txt">
+          <div style="font-weight:800; margin-bottom:4px">${escapeHtml(card.title)}</div>
+          <div class="tiny faint">${escapeHtml(card.context)}</div>
+        </div>`;
+        el.addEventListener("click", () => openSheet(typeLabel, card));
+        mount.appendChild(el);
+      });
+    }
+
+    // Modal / sheet
+    const modal = $("#modal");
+    const sheetChecklist = $("#sheetChecklist");
+    let openObj = null;
+
+    function openSheet(type, obj){
+      openObj = obj;
+      $("#sheetType").textContent = type;
+      $("#sheetTitle").textContent = obj.title;
+      $("#sheetContext").textContent = obj.context || "—";
+      $("#sheetNotes").value = "";
+      renderSheetChecklist();
+      modal.classList.add("on");
+    }
+
+    function renderSheetChecklist(){
+      sheetChecklist.innerHTML = "";
+      if(!openObj || !openObj.checklist) return;
+      openObj.checklist.forEach(c => {
+        const el = document.createElement("div");
+        el.className = "item" + (c.done ? " done" : "");
+        el.innerHTML = `<div class="box"></div><div class="txt">${escapeHtml(c.text)}</div>`;
+        el.addEventListener("click", () => {
+          c.done = !c.done;
+          renderSheetChecklist();
+        });
+        sheetChecklist.appendChild(el);
+      });
+    }
+
+    $("#closeModal").addEventListener("click", () => modal.classList.remove("on"));
+    modal.addEventListener("click", (e) => { if(e.target === modal) modal.classList.remove("on"); });
+
+    // Debrief modal
+    const debrief = $("#debriefModal");
+    $("#openDebrief").addEventListener("click", () => debrief.classList.add("on"));
+    $("#closeDebrief").addEventListener("click", () => debrief.classList.remove("on"));
+    debrief.addEventListener("click", (e) => { if(e.target === debrief) debrief.classList.remove("on"); });
+
+    // Copy helpers
+    $("#copyNotes").addEventListener("click", async () => {
+      const txt = $("#sheetNotes").value.trim();
+      if(!txt) return;
+      try{ await navigator.clipboard.writeText(txt); flashPill("Copied"); }catch{ flashPill("Copy failed"); }
+    });
+
+    $("#copyDebrief").addEventListener("click", async () => {
+      const txt = $("#debriefText").value.trim();
+      if(!txt) return;
+      try{ await navigator.clipboard.writeText(txt); flashPill("Copied"); }catch{ flashPill("Copy failed"); }
+    });
+
+    function flashPill(msg){
+      const lane = $("#laneHint");
+      const prev = lane.textContent;
+      lane.textContent = msg;
+      setTimeout(() => lane.textContent = prev, 900);
+    }
+
+    // Add buttons (minimal prompts, no storage)
+    $("#addJobBtn").addEventListener("click", () => addCard("jobs", "Job"));
+    $("#addPersonBtn").addEventListener("click", () => addCard("people", "Person"));
+    $("#addFamilyBtn").addEventListener("click", () => addCard("family", "Family"));
+
+    function addCard(listKey, label){
+      const title = prompt(`${label} title:`) || "";
+      if(!title.trim()) return;
+      const context = prompt(`${label} context (short):`) || "";
+      state[listKey].unshift({
+        id: `${listKey}-${Date.now()}`,
+        title: title.trim(),
+        context: context.trim(),
+        checklist: []
+      });
+      renderAll();
+    }
+
+    // Money pulse minimal set
+    function setBonus(amount){
+      state.money.bonus = amount;
+      $("#bonusKpi").textContent = amount ? `$${amount}` : `$—`;
+    }
+
+    // Escape
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function renderAll(){
+      renderDots();
+      renderToday();
+      renderCards("jobs", "#jobsList", "Job");
+      renderCards("people", "#peopleList", "Person");
+      renderCards("family", "#familyList", "Family");
+      setBonus(state.money.bonus);
+      $("#dueKpi").textContent = "Car ins end-month";
+      $("#mode").textContent = "Human";
+    }
+
+    // Boot
+    renderAll();
+
+    // Small touch: swipe down closes modals? (simple ESC via key for desktop)
+    window.addEventListener("keydown", (e) => {
+      if(e.key === "Escape"){
+        modal.classList.remove("on");
+        debrief.classList.remove("on");
+      }
+    });
+  </script>
+</body>
+</html>
