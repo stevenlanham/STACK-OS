@@ -2,18 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <meta name="color-scheme" content="dark" />
-  <title>Stack</title>
-
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>STACK-OS 4.3 (Smoke Test)</title>
   <style>
     :root{
-      --bg:#0b0f14; --panel:#0f1620; --panel2:#0c121a; --line:#223042;
-      --text:#e8eef7; --muted:#9fb0c6; --faint:#6f8199;
-      --accent:#7dd3fc; --accent2:#a78bfa; --good:#34d399; --warn:#fbbf24; --bad:#fb7185;
-      --shadow: 0 10px 30px rgba(0,0,0,.45);
-      --r:16px;
+      --bg1:#070b12;
+      --bg2:#091526;
+      --card: rgba(12,20,34,.55);
+      --card2: rgba(0,0,0,.30);
+      --stroke: rgba(140,180,220,.18);
+      --stroke2: rgba(140,180,220,.26);
+      --text: rgba(235,245,255,.92);
+      --muted: rgba(235,245,255,.65);
+      --pill: rgba(0,0,0,.35);
       --tap: 56px;
+      --r: 18px;
+      --r2: 14px;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
       --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
     }
 
@@ -21,976 +26,559 @@
     html,body{height:100%}
     body{
       margin:0;
-      background: radial-gradient(1200px 900px at 20% -10%, rgba(167,139,250,.18), transparent 60%),
-                  radial-gradient(1200px 900px at 90% 10%, rgba(125,211,252,.16), transparent 60%),
-                  var(--bg);
-      color:var(--text);
       font-family:var(--font);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 900px at 20% 10%, rgba(70,140,220,.16), transparent 55%),
+        radial-gradient(1200px 900px at 80% 0%, rgba(120,80,255,.12), transparent 55%),
+        radial-gradient(1200px 900px at 50% 100%, rgba(0,255,200,.08), transparent 55%),
+        linear-gradient(180deg, var(--bg2), var(--bg1));
       letter-spacing:.2px;
     }
 
     .wrap{
-      max-width: 520px;
-      margin: 0 auto;
-      padding: 14px 14px 90px;
+      max-width:820px;
+      margin:0 auto;
+      padding:18px 14px 92px;
     }
 
-    .topbar{
+    .top{
       display:flex;
-      align-items:center;
+      align-items:flex-start;
       justify-content:space-between;
       gap:12px;
-      padding: 10px 12px;
-      border:1px solid rgba(255,255,255,.06);
-      background: rgba(15,22,32,.72);
-      backdrop-filter: blur(10px);
-      border-radius: var(--r);
-      box-shadow: var(--shadow);
-      position: sticky;
-      top: 10px;
-      z-index: 10;
+      margin-top:6px;
+      margin-bottom:16px;
     }
 
     .brand{
       display:flex;
       flex-direction:column;
-      line-height:1.1;
+      gap:4px;
     }
-    .brand .title{font-size:18px; font-weight:700}
-    .brand .sub{font-size:12px; color:var(--muted); margin-top:4px}
+    .brand h1{
+      margin:0;
+      font-size:34px;
+      letter-spacing:.4px;
+    }
+    .brand .sub{
+      font-size:14px;
+      color:var(--muted);
+    }
 
-    .pill{
-      display:flex; align-items:center; gap:8px;
-      padding: 10px 12px;
-      border-radius: 999px;
-      background: rgba(12,18,26,.85);
-      border:1px solid rgba(255,255,255,.06);
-      color: var(--muted);
-      font-size: 12px;
-      user-select:none;
+    .presence{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.25);
+      box-shadow: var(--shadow);
+      font-size:14px;
+      color:var(--muted);
       white-space:nowrap;
     }
-
-    .grid{
-      display:grid;
-      gap:12px;
-      margin-top:12px;
+    .dot{
+      width:9px;height:9px;border-radius:99px;
+      background: rgba(120,255,200,.9);
+      box-shadow: 0 0 12px rgba(120,255,200,.35);
+    }
+    .dot.off{
+      background: rgba(255,255,255,.25);
+      box-shadow:none;
     }
 
     .card{
-      background: linear-gradient(180deg, rgba(15,22,32,.90), rgba(12,18,26,.90));
-      border:1px solid rgba(255,255,255,.06);
-      border-radius: var(--r);
-      padding: 14px;
+      background: var(--card);
+      border:1px solid var(--stroke);
+      border-radius: 22px;
+      padding:16px;
       box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
     }
 
-    .card h2{
-      margin:0;
-      font-size: 14px;
-      letter-spacing:.6px;
-      color: var(--muted);
-      font-weight: 700;
-      text-transform: uppercase;
+    .cardTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:8px;
+      gap:10px;
+    }
+    .cardTitle strong{
+      letter-spacing:.08em;
+      font-size:14px;
+      color: rgba(235,245,255,.90);
+    }
+    .small{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.35em;
     }
 
-    .row{display:flex; gap:10px; align-items:center}
-    .space{justify-content:space-between}
-    .mt8{margin-top:8px}
-    .mt10{margin-top:10px}
-    .mt12{margin-top:12px}
-    .mt14{margin-top:14px}
-    .muted{color:var(--muted)}
-    .faint{color:var(--faint)}
-    .small{font-size:12px}
-    .tiny{font-size:11px}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    .focusRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-top:10px;
+    }
+    .focusDots{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .focusDots button{
+      width:18px;height:18px;border-radius:99px;
+      border:1px solid var(--stroke2);
+      background: rgba(0,0,0,.25);
+      padding:0;
+    }
+    .focusDots button.on{
+      background: rgba(120,190,255,.9);
+      border-color: rgba(120,190,255,.9);
+      box-shadow: 0 0 10px rgba(120,190,255,.25);
+    }
 
-    /* Bottom Nav */
-    .nav{
-      position: fixed;
-      left:0; right:0; bottom:0;
-      background: rgba(10,14,20,.75);
-      border-top:1px solid rgba(255,255,255,.08);
+    .panel{
+      margin-top:16px;
+    }
+
+    .tabs{
+      position:fixed;
+      left:0;right:0;bottom:0;
+      padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(5,8,14,.75);
+      border-top:1px solid rgba(140,180,220,.16);
       backdrop-filter: blur(12px);
-      padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
-      z-index: 20;
     }
-    .nav .bar{
-      max-width: 520px;
+
+    .tabsInner{
+      max-width:820px;
       margin:0 auto;
-      display:grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap:8px;
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
     }
-    .tab{
+
+    .tabBtn{
+      flex:1;
       height: var(--tap);
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.08);
-      background: rgba(15,22,32,.70);
-      color: var(--muted);
+      border-radius:16px;
+      border:1px solid rgba(140,180,220,.18);
+      background: rgba(0,0,0,.28);
+      color: rgba(235,245,255,.85);
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      gap:4px;
-      user-select:none;
-      -webkit-tap-highlight-color: transparent;
-      cursor:pointer;
+      gap:3px;
+      font-size:12px;
+      letter-spacing:.2px;
     }
-    .tab .ico{font-size:16px; line-height:1}
-    .tab .lbl{font-size:11px; line-height:1; letter-spacing:.2px}
-    .tab.active{
-      color: var(--text);
-      border-color: rgba(125,211,252,.45);
-      background: rgba(15,22,32,.92);
-      box-shadow: 0 0 0 1px rgba(125,211,252,.25) inset;
+    .tabBtn .ico{
+      font-size:18px;
+      line-height:18px;
     }
-
-    /* Sections */
-    .section{display:none}
-    .section.active{display:block}
-
-    /* Focus dots */
-    .dots{display:flex; gap:10px; align-items:center}
-    .dot{
-      width: 14px; height: 14px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.22);
-      background: rgba(255,255,255,.04);
-      cursor:pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .dot.on{background: rgba(125,211,252,.9); border-color: rgba(125,211,252,.95)}
-    .dot.purple.on{background: rgba(167,139,250,.95); border-color: rgba(167,139,250,.95)}
-    .dot.green.on{background: rgba(52,211,153,.95); border-color: rgba(52,211,153,.95)}
-
-    /* Checklist */
-    .list{margin-top:10px; display:flex; flex-direction:column; gap:8px}
-    .item{
-      display:flex; align-items:center; gap:10px;
-      padding: 12px 12px;
-      border-radius: 14px;
-      background: rgba(12,18,26,.75);
-      border:1px solid rgba(255,255,255,.06);
-      cursor:pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .box{
-      width: 18px; height: 18px; border-radius:6px;
-      border:1px solid rgba(255,255,255,.22);
-      background: rgba(255,255,255,.04);
-      flex: 0 0 auto;
-      position: relative;
-    }
-    .item.done .box{
-      border-color: rgba(52,211,153,.8);
-      background: rgba(52,211,153,.18);
-    }
-    .item.done .box:after{
-      content:"";
-      position:absolute;
-      left:5px; top:2px;
-      width:5px; height:10px;
-      border: 2px solid rgba(52,211,153,1);
-      border-top:0; border-left:0;
-      transform: rotate(45deg);
-    }
-    .txt{flex:1; font-size:13px}
-    .item.done .txt{
-      color: rgba(232,238,247,.55);
-      text-decoration: line-through;
-      text-decoration-thickness: 2px;
+    .tabBtn.active{
+      background: rgba(20,40,70,.40);
+      border-color: rgba(140,180,220,.28);
+      box-shadow: 0 10px 18px rgba(0,0,0,.20);
     }
 
-    /* Cards inside */
-    .mini{
-      padding:12px;
-      border-radius:14px;
-      background: rgba(12,18,26,.65);
-      border:1px solid rgba(255,255,255,.06);
-    }
+    .hidden{display:none !important;}
 
-    /* Modal */
-    .modal{
-      position: fixed;
+    /* ===== SMOKE TEST MODAL ===== */
+    .modalBack{
+      position:fixed;
       inset:0;
       background: rgba(0,0,0,.55);
-      display:none;
+      display:flex;
       align-items:flex-end;
       justify-content:center;
-      padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
-      z-index: 50;
+      padding:14px 14px calc(14px + env(safe-area-inset-bottom));
+      z-index:50;
     }
-    .modal.on{display:flex}
-    .sheet{
-      width:min(520px, 100%);
-      max-height: 80vh;
-      overflow:auto;
-      background: rgba(15,22,32,.96);
-      border:1px solid rgba(255,255,255,.08);
-      border-radius: 18px;
-      box-shadow: var(--shadow);
-      padding: 14px;
+
+    .modal{
+      width:min(820px, 100%);
+      background: rgba(10,18,30,.80);
+      border: 1px solid rgba(140,180,220,.20);
+      border-radius: 22px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.45);
+      backdrop-filter: blur(12px);
+      padding:14px;
     }
-    .sheet .head{
-      display:flex; align-items:center; justify-content:space-between; gap:10px;
-      position: sticky; top:0;
-      background: rgba(15,22,32,.96);
-      padding-bottom: 10px;
-    }
-    .btn{
-      height: 40px;
-      padding: 0 12px;
-      border-radius: 12px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(12,18,26,.85);
-      color: var(--text);
-      cursor:pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .btn:active{transform: translateY(1px)}
-    .btn.ghost{color:var(--muted)}
-    .tag{
-      font-size:11px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(12,18,26,.75);
-      color: var(--muted);
-      display:inline-flex;
+
+    .smokeHeader{
+      display:flex;
       align-items:center;
-      gap:6px;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
+    }
+    .smokeHeader .title{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .smokeHeader .title strong{
+      letter-spacing:.08em;
+      font-size:14px;
+    }
+    .smokeHeader .title span{
+      font-size:13px;
+      color:var(--muted);
     }
 
-    textarea{
-      width:100%;
-      min-height: 120px;
-      resize: vertical;
-      border-radius: 14px;
-      padding: 12px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(12,18,26,.70);
-      color: var(--text);
-      outline:none;
-      font-family: var(--font);
-      font-size: 13px;
-      line-height: 1.35;
+    .btn{
+      height:44px;
+      padding:0 12px;
+      border-radius:14px;
+      border:1px solid rgba(140,180,220,.25);
+      background: rgba(0,0,0,.25);
+      color: rgba(235,245,255,.90);
+      font-size:14px;
     }
 
-    .kpi{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
+    .smokeBtns{
+      display:flex;
       gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin: 8px 0 10px;
+    }
+    .smokeStatus{
+      margin-left:auto;
+      color: var(--muted);
+      font-size:13px;
+    }
+
+    pre{
+      margin:0;
+      padding:12px;
+      border-radius:14px;
+      background: rgba(0,0,0,.35);
+      border:1px solid rgba(140,180,220,.15);
+      overflow:auto;
+      max-height: 46vh;
+      font-size: 13px;
+      line-height: 1.35em;
+      white-space: pre-wrap;
+    }
+
+    .row{
+      display:flex; gap:10px; flex-wrap:wrap;
       margin-top:10px;
     }
-    .kpi .mini strong{display:block; font-size:14px; margin-top:4px}
-    .kpi .mini span{display:block; font-size:11px; color:var(--muted)}
-
-    .divider{
-      height:1px;
-      background: rgba(255,255,255,.08);
-      margin: 12px 0;
+    .pill{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.22);
+      color: var(--muted);
+      font-size:13px;
     }
+    a, a:visited{color: rgba(120,190,255,.95)}
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="topbar">
+    <div class="top">
       <div class="brand">
-        <div class="title">Stack</div>
-        <div class="sub" id="stamp">Loading…</div>
+        <h1>Stack</h1>
+        <div class="sub">Loading…</div>
       </div>
-      <div class="pill"><span class="mono" id="mode">Human</span> · <span id="laneHint">present</span></div>
-    </div>
 
-    <!-- TODAY -->
-    <section class="section active" id="sec-today" data-sec="today">
-      <div class="grid">
-
-        <div class="card">
-          <div class="row space">
-            <h2>Today’s Focus</h2>
-            <div class="dots" title="Tap dots to toggle">
-              <div class="dot on" data-dot="work"></div>
-              <div class="dot purple" data-dot="home"></div>
-              <div class="dot green" data-dot="body"></div>
-            </div>
-          </div>
-
-          <div class="mt10 small muted">
-            Work · Home · Body — toggle what’s “hot” today. (Dots persist only while page is open. Storage comes later.)
-          </div>
-
-          <div class="list" id="todayList">
-            <!-- JS fills -->
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="row space">
-            <h2>Quick Scan</h2>
-            <span class="tag">🧠 presence > instructions</span>
-          </div>
-
-          <div class="mt10 mini">
-            <div class="small muted">One-line check</div>
-            <div class="mt8" id="oneLine">
-              Hold the room. Don’t sprint your brain into the ground.
-            </div>
-            <div class="mt10 tiny faint">
-              If you want a “first-day checklist” block next week, say: <span class="mono">Go tactical</span>.
-            </div>
-          </div>
-
-          <div class="kpi">
-            <div class="mini">
-              <span>Work</span>
-              <strong id="kpiWork">—</strong>
-              <span class="tiny">sites / installs / calls</span>
-            </div>
-            <div class="mini">
-              <span>Home</span>
-              <strong id="kpiHome">—</strong>
-              <span class="tiny">family / prep / reset</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="row space">
-            <h2>Rook Debrief</h2>
-            <button class="btn" id="openDebrief">Open</button>
-          </div>
-          <div class="mt10 small muted">
-            Use this when you want to drop a quick “Signal / Drop:” and keep moving.
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- JOBS -->
-    <section class="section" id="sec-jobs" data-sec="jobs">
-      <div class="grid">
-        <div class="card">
-          <div class="row space">
-            <h2>Jobs</h2>
-            <button class="btn" id="addJobBtn">+ Add</button>
-          </div>
-          <div class="mt10 small muted">Tap a job card to open details.</div>
-          <div class="list" id="jobsList"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- PEOPLE -->
-    <section class="section" id="sec-people" data-sec="people">
-      <div class="grid">
-        <div class="card">
-          <div class="row space">
-            <h2>People</h2>
-            <button class="btn" id="addPersonBtn">+ Add</button>
-          </div>
-          <div class="mt10 small muted">Mentors, leads, customers, “follow up with ___”.</div>
-          <div class="list" id="peopleList"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FAMILY -->
-    <section class="section" id="sec-family" data-sec="family">
-      <div class="grid">
-        <div class="card">
-          <div class="row space">
-            <h2>Family</h2>
-            <button class="btn" id="addFamilyBtn">+ Add</button>
-          </div>
-          <div class="mt10 small muted">Check-ins, plans, outings, “don’t forget”.</div>
-          <div class="list" id="familyList"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- MONEY -->
-    <section class="section" id="sec-money" data-sec="money">
-      <div class="grid">
-        <div class="card">
-          <div class="row space">
-            <h2>Money Pulse</h2>
-            <span class="tag">📌 no budget math unless you ask</span>
-          </div>
-
-          <div class="mt10 small muted">
-            This is a pulse board — not a full budget engine. (We keep budget behind your verification step, always.)
-          </div>
-
-          <div class="kpi">
-            <div class="mini">
-              <span>Bonus / Extra</span>
-              <strong id="bonusKpi">$—</strong>
-              <span class="tiny">noted when you tell me</span>
-            </div>
-            <div class="mini">
-              <span>Due Soon</span>
-              <strong id="dueKpi">—</strong>
-              <span class="tiny">car ins end-month</span>
-            </div>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="mini">
-            <div class="small muted">Note</div>
-            <div class="mt8 small" id="moneyNote">
-              If you drop screenshots, I’ll skim and bullet what matters. No lectures.
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- MODAL / SHEET -->
-    <div class="modal" id="modal">
-      <div class="sheet" role="dialog" aria-modal="true" aria-label="Details">
-        <div class="head">
-          <div>
-            <div class="small muted" id="sheetType">Details</div>
-            <div style="font-size:16px;font-weight:800;margin-top:4px" id="sheetTitle">—</div>
-          </div>
-          <div class="row">
-            <button class="btn ghost" id="closeModal">Close</button>
-          </div>
-        </div>
-
-        <div class="mini mt10" id="sheetMeta">
-          <div class="small muted">Context</div>
-          <div class="mt8 small" id="sheetContext">—</div>
-        </div>
-
-        <div class="mt12">
-          <div class="small muted">Checklist</div>
-          <div class="list" id="sheetChecklist"></div>
-        </div>
-
-        <div class="mt12">
-          <div class="small muted">Notes</div>
-          <textarea id="sheetNotes" placeholder="Type notes here (no storage yet — copy/paste if you need to keep it)."></textarea>
-        </div>
-
-        <div class="mt12">
-          <button class="btn" id="copyNotes">Copy Notes</button>
-        </div>
+      <div class="presence" id="presencePill">
+        <span class="dot off" id="authDot"></span>
+        <span id="presenceText">Human • present</span>
       </div>
     </div>
 
-    <!-- DEBRIEF MODAL -->
-    <div class="modal" id="debriefModal">
-      <div class="sheet" role="dialog" aria-modal="true" aria-label="Rook Debrief">
-        <div class="head">
-          <div>
-            <div class="small muted">Rook Debrief</div>
-            <div style="font-size:16px;font-weight:800;margin-top:4px">Drop / Signal</div>
-          </div>
-          <div class="row">
-            <button class="btn ghost" id="closeDebrief">Close</button>
-          </div>
+    <div class="card">
+      <div class="cardTitle">
+        <strong>TODAY’S FOCUS</strong>
+        <div class="focusDots" aria-label="focus toggles">
+          <button id="fWork" title="Work"></button>
+          <button id="fHome" title="Home"></button>
+          <button id="fBody" title="Body"></button>
         </div>
+      </div>
+      <div class="small">
+        Work • Home • Body — toggle what’s “hot” today. (Dots persist only while page is open. Storage later.)
+      </div>
+    </div>
 
-        <div class="mini mt10">
-          <div class="small muted">How to use</div>
-          <div class="mt8 small">
-            Start with <span class="mono">Drop:</span> (or <span class="mono">Signal:</span>). Optional line: <span class="mono">Vibe:</span>.
-            Then dump it. This is for momentum.
-          </div>
-        </div>
+    <div class="panel card" id="panelToday">
+      <div class="cardTitle">
+        <strong>TODAY</strong>
+        <span class="pill" id="sessionPill">session: none</span>
+      </div>
+      <div class="small">
+        This build is focused on one thing: <b>Supabase sign-in + read households + read household_members</b>.
+        Use the Money tab to open Smoke Test.
+      </div>
+      <div class="row">
+        <span class="pill" id="whoPill">user: none</span>
+        <span class="pill" id="housePill">household: unknown</span>
+      </div>
+    </div>
 
-        <div class="mt12">
-          <textarea id="debriefText" placeholder="Drop: ...&#10;Vibe: ..."></textarea>
-        </div>
+    <div class="panel card hidden" id="panelJobs">
+      <div class="cardTitle"><strong>JOBS</strong></div>
+      <div class="small">Placeholder panel.</div>
+    </div>
 
-        <div class="mt12 row space">
-          <button class="btn" id="copyDebrief">Copy</button>
-          <span class="tiny faint">No storage yet.</span>
-        </div>
+    <div class="panel card hidden" id="panelPeople">
+      <div class="cardTitle"><strong>PEOPLE</strong></div>
+      <div class="small">Placeholder panel.</div>
+    </div>
+
+    <div class="panel card hidden" id="panelFamily">
+      <div class="cardTitle"><strong>FAMILY</strong></div>
+      <div class="small">Placeholder panel.</div>
+    </div>
+
+    <div class="panel card hidden" id="panelMoney">
+      <div class="cardTitle">
+        <strong>MONEY</strong>
+        <button class="btn" id="openSmokeBtn" type="button">Open Smoke Test</button>
+      </div>
+      <div class="small">
+        Smoke Test lives here so you can verify auth + RLS + reads before we wire real app data.
       </div>
     </div>
   </div>
 
-  <!-- NAV -->
-  <div class="nav">
-    <div class="bar">
-      <div class="tab active" data-go="today" role="button" aria-label="Today">
-        <div class="ico">🎯</div><div class="lbl">Today</div>
-      </div>
-      <div class="tab" data-go="jobs" role="button" aria-label="Jobs">
-        <div class="ico">🧰</div><div class="lbl">Jobs</div>
-      </div>
-      <div class="tab" data-go="people" role="button" aria-label="People">
-        <div class="ico">🤝</div><div class="lbl">People</div>
-      </div>
-      <div class="tab" data-go="family" role="button" aria-label="Family">
-        <div class="ico">🏠</div><div class="lbl">Family</div>
-      </div>
-      <div class="tab" data-go="money" role="button" aria-label="Money Pulse">
-        <div class="ico">📈</div><div class="lbl">Money</div>
-      </div>
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tabsInner">
+      <button class="tabBtn active" id="tabToday"><div class="ico">🎯</div>Today</button>
+      <button class="tabBtn" id="tabJobs"><div class="ico">🧰</div>Jobs</button>
+      <button class="tabBtn" id="tabPeople"><div class="ico">🤝</div>People</button>
+      <button class="tabBtn" id="tabFamily"><div class="ico">🏠</div>Family</button>
+      <button class="tabBtn" id="tabMoney"><div class="ico">📈</div>Money</button>
     </div>
   </div>
 
-  <script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  const SUPABASE_URL = https://pgqfnpnrgadhzvueqorr.supabase.co;
-const SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBncWZucG5yZ2FkaHp2dWVxb3JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MzM5MzIsImV4cCI6MjA4MTMwOTkzMn0.e12HE7pRB-WGO5Dv_DssKK8OH3Y-A0AxZub5bX2WSR0;
+  <!-- SMOKE TEST MODAL -->
+  <div class="modalBack hidden" id="smokeBack">
+    <div class="modal">
+      <div class="smokeHeader">
+        <div class="title">
+          <strong>SMOKE TEST</strong>
+          <span>Supabase auth + households + household_members</span>
+        </div>
+        <button class="btn" id="closeSmokeBtn" type="button">Close</button>
+      </div>
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  smokeTest();
-    // ===== Stack v2.4 (Single-file) — Mechanics first, storage later =====
-  
-  
+      <div class="smokeBtns">
+        <button class="btn" id="btnEmail" type="button">Email Link</button>
+        <button class="btn" id="btnRun" type="button">Run Queries</button>
+        <button class="btn" id="btnOut" type="button">Sign Out</button>
+        <span class="smokeStatus" id="smokeStatus">idle</span>
+      </div>
 
-    const state = {
-      dots: { work:true, home:false, body:false },
-      today: [
-        { id:"t1", text:"Coffee + breakfast. Don’t rush your head.", done:false },
-        { id:"t2", text:"One clean check-in: Steph (seen + supported).", done:false },
-        { id:"t3", text:"Body maintenance: water + 10 min stretch / walk.", done:false },
-        { id:"t4", text:"Work: hold standard, no ego. Presence > speed.", done:false },
-      ],
-      jobs: [
-        { id:"j1", title:"Warren Dairy", context:"Cold, heavy environment. Win with calm sequencing.", checklist:[
-          {id:"c1", text:"Safety + access path (slip / manure / ice)", done:false},
-          {id:"c2", text:"Confirm power + operator behavior", done:false},
-          {id:"c3", text:"Run/adjust + final test", done:false},
-        ]},
-      ],
-      people: [
-        { id:"p1", title:"Vincent", context:"Training invitation. Speak like an equal: calm, clear, accountable.", checklist:[
-          {id:"c1", text:"Ask what “training” means in practice", done:false},
-          {id:"c2", text:"Clarify expectations + timeline", done:false},
-          {id:"c3", text:"Offer a clean coaching system for techs", done:false},
-        ]},
-      ],
-      family: [
-        { id:"f1", title:"Steph", context:"Words + touch. Make her feel seen during the build.", checklist:[
-          {id:"c1", text:"Quick check-in: ‘How are you really?’", done:false},
-          {id:"c2", text:"One small act: hug / help / time", done:false},
-        ]},
-      ],
-      money: { bonus: null }
-    };
+      <pre id="smokeOut">{}</pre>
+    </div>
+  </div>
 
-    // Utilities
-    const $ = (sel, root=document) => root.querySelector(sel);
-    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    function stamp(){
-      const d = new Date();
-      const opts = { weekday:"short", month:"short", day:"numeric" };
-      const time = d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
-      $("#stamp").textContent = `${d.toLocaleDateString([], opts)} · ${time}`;
-    }
-    stamp(); setInterval(stamp, 15000);
+    // =========================
+    // STACK 4.3 — SUPABASE CONFIG
+    // =========================
+    const supabaseUrl = "https://pgqfnpnrgadhzvueqorr.supabase.co";
+    const supabaseAnonKey = "PASTE_YOUR_ANON_KEY_HERE"; // <-- paste your anon key here
 
-    // Tabs (make whole tab clickable)
-    function go(sec){
-      $$(".section").forEach(s => s.classList.toggle("active", s.dataset.sec === sec));
-      $$(".tab").forEach(t => t.classList.toggle("active", t.dataset.go === sec));
-    }
-    $$(".tab").forEach(t => t.addEventListener("click", () => go(t.dataset.go)));
-
-    // Dots
-    $$(".dot").forEach(d => {
-      d.addEventListener("click", () => {
-        const key = d.dataset.dot;
-        state.dots[key] = !state.dots[key];
-        renderDots();
-      });
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        detectSessionInUrl: true,
+        autoRefreshToken: true
+      }
     });
-    function renderDots(){
-      $$(".dot").forEach(d => {
-        const key = d.dataset.dot;
-        d.classList.toggle("on", !!state.dots[key]);
-      });
-      const lane = (state.dots.work ? "Work " : "") + (state.dots.home ? "Home " : "") + (state.dots.body ? "Body" : "");
-      $("#laneHint").textContent = lane.trim() || "present";
+
+    // =========================
+    // UI HELPERS
+    // =========================
+    const $ = (id) => document.getElementById(id);
+
+    function setStatus(s){ $("smokeStatus").textContent = s; }
+    function print(obj){ $("smokeOut").textContent = JSON.stringify(obj, null, 2); }
+
+    function show(id){ $(id).classList.remove("hidden"); }
+    function hide(id){ $(id).classList.add("hidden"); }
+
+    function setActiveTab(btnId){
+      const all = ["tabToday","tabJobs","tabPeople","tabFamily","tabMoney"];
+      all.forEach(id => $(id).classList.remove("active"));
+      $(btnId).classList.add("active");
     }
 
-    // Today list
-    function renderToday(){
-      const wrap = $("#todayList");
-      wrap.innerHTML = "";
-      state.today.forEach(it => {
-        const el = document.createElement("div");
-        el.className = "item" + (it.done ? " done" : "");
-        el.dataset.id = it.id;
-        el.innerHTML = `<div class="box"></div><div class="txt">${escapeHtml(it.text)}</div>`;
-        el.addEventListener("click", () => {
-          it.done = !it.done;
-          renderToday();
+    function showPanel(panelId){
+      const panels = ["panelToday","panelJobs","panelPeople","panelFamily","panelMoney"];
+      panels.forEach(id => hide(id));
+      show(panelId);
+    }
+
+    // Focus dots (simple local toggles)
+    function toggleDot(id){
+      const b = $(id);
+      b.classList.toggle("on");
+    }
+    $("fWork").addEventListener("click", ()=>toggleDot("fWork"));
+    $("fHome").addEventListener("click", ()=>toggleDot("fHome"));
+    $("fBody").addEventListener("click", ()=>toggleDot("fBody"));
+
+    // Tabs wiring
+    $("tabToday").addEventListener("click", ()=>{ setActiveTab("tabToday"); showPanel("panelToday"); });
+    $("tabJobs").addEventListener("click",  ()=>{ setActiveTab("tabJobs");  showPanel("panelJobs");  });
+    $("tabPeople").addEventListener("click",()=>{ setActiveTab("tabPeople");showPanel("panelPeople");});
+    $("tabFamily").addEventListener("click",()=>{ setActiveTab("tabFamily");showPanel("panelFamily");});
+    $("tabMoney").addEventListener("click", ()=>{ setActiveTab("tabMoney"); showPanel("panelMoney"); });
+
+    // Smoke modal open/close
+    $("openSmokeBtn").addEventListener("click", ()=> show("smokeBack"));
+    $("closeSmokeBtn").addEventListener("click", ()=> hide("smokeBack"));
+    $("smokeBack").addEventListener("click", (e)=>{ if(e.target === $("smokeBack")) hide("smokeBack"); });
+
+    // Escape closes smoke modal
+    window.addEventListener("keydown", (e)=>{
+      if(e.key === "Escape") hide("smokeBack");
+    });
+
+    // =========================
+    // AUTH / SESSION DISPLAY
+    // =========================
+    function setSessionUI(user){
+      const has = !!user;
+      $("authDot").classList.toggle("off", !has);
+      $("sessionPill").textContent = has ? "session: active" : "session: none";
+      $("whoPill").textContent = has ? `user: ${user.email || user.id}` : "user: none";
+      if(!has) $("housePill").textContent = "household: unknown";
+    }
+
+    async function bootUser(){
+      const { data, error } = await supabase.auth.getUser();
+      const user = data?.user || null;
+
+      $(".brand .sub"); // no-op (keeps bundle clean)
+      setSessionUI(user);
+
+      print({
+        boot: true,
+        user: user ? { id: user.id, email: user.email } : null,
+        userErr: error || null
+      });
+
+      setStatus(user ? "signed in" : "no session");
+      return user;
+    }
+
+    // =========================
+    // SMOKE TEST ACTIONS
+    // =========================
+    $("btnEmail").addEventListener("click", async ()=>{
+      try{
+        setStatus("sending link…");
+        const email = prompt("Email for magic link:");
+        if(!email){ setStatus("cancelled"); return; }
+
+        // Must match GitHub Pages origin/path so the link returns to the app
+        const redirectTo = window.location.origin + window.location.pathname;
+
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: { emailRedirectTo: redirectTo }
         });
-        wrap.appendChild(el);
-      });
 
-      // KPI quick fill (simple placeholders)
-      const workCount = state.jobs.length;
-      const homeCount = state.family.length;
-      $("#kpiWork").textContent = `${workCount}`;
-      $("#kpiHome").textContent = `${homeCount}`;
-    }
-
-    // Lists for Jobs / People / Family
-    function renderCards(listKey, mountId, typeLabel){
-      const mount = $(mountId);
-      mount.innerHTML = "";
-      state[listKey].forEach(card => {
-        const el = document.createElement("div");
-        el.className = "item";
-        el.innerHTML = `<div class="box"></div><div class="txt">
-          <div style="font-weight:800; margin-bottom:4px">${escapeHtml(card.title)}</div>
-          <div class="tiny faint">${escapeHtml(card.context)}</div>
-        </div>`;
-        el.addEventListener("click", () => openSheet(typeLabel, card));
-        mount.appendChild(el);
-      });
-    }
-
-    // Modal / sheet
-    const modal = $("#modal");
-    const sheetChecklist = $("#sheetChecklist");
-    let openObj = null;
-
-    function openSheet(type, obj){
-      openObj = obj;
-      $("#sheetType").textContent = type;
-      $("#sheetTitle").textContent = obj.title;
-      $("#sheetContext").textContent = obj.context || "—";
-      $("#sheetNotes").value = "";
-      renderSheetChecklist();
-      modal.classList.add("on");
-    }
-
-    function renderSheetChecklist(){
-      sheetChecklist.innerHTML = "";
-      if(!openObj || !openObj.checklist) return;
-      openObj.checklist.forEach(c => {
-        const el = document.createElement("div");
-        el.className = "item" + (c.done ? " done" : "");
-        el.innerHTML = `<div class="box"></div><div class="txt">${escapeHtml(c.text)}</div>`;
-        el.addEventListener("click", () => {
-          c.done = !c.done;
-          renderSheetChecklist();
-        });
-        sheetChecklist.appendChild(el);
-      });
-    }
-
-    $("#closeModal").addEventListener("click", () => modal.classList.remove("on"));
-    modal.addEventListener("click", (e) => { if(e.target === modal) modal.classList.remove("on"); });
-
-    // Debrief modal
-    const debrief = $("#debriefModal");
-    $("#openDebrief").addEventListener("click", () => debrief.classList.add("on"));
-    $("#closeDebrief").addEventListener("click", () => debrief.classList.remove("on"));
-    debrief.addEventListener("click", (e) => { if(e.target === debrief) debrief.classList.remove("on"); });
-
-    // Copy helpers
-    $("#copyNotes").addEventListener("click", async () => {
-      const txt = $("#sheetNotes").value.trim();
-      if(!txt) return;
-      try{ await navigator.clipboard.writeText(txt); flashPill("Copied"); }catch{ flashPill("Copy failed"); }
+        if(error) throw error;
+        setStatus("email sent");
+        print({ step:"Email Link", ok:true, email, redirectTo });
+      }catch(e){
+        setStatus("error");
+        print({ step:"Email Link", error:{ message: e?.message || String(e) } });
+      }
     });
 
-    $("#copyDebrief").addEventListener("click", async () => {
-      const txt = $("#debriefText").value.trim();
-      if(!txt) return;
-      try{ await navigator.clipboard.writeText(txt); flashPill("Copied"); }catch{ flashPill("Copy failed"); }
+    $("btnOut").addEventListener("click", async ()=>{
+      try{
+        setStatus("signing out…");
+        const { error } = await supabase.auth.signOut();
+        if(error) throw error;
+        setStatus("signed out");
+        setSessionUI(null);
+        $("housePill").textContent = "household: unknown";
+        print({ step:"Sign Out", ok:true });
+      }catch(e){
+        setStatus("error");
+        print({ step:"Sign Out", error:{ message: e?.message || String(e) } });
+      }
     });
 
-    function flashPill(msg){
-      const lane = $("#laneHint");
-      const prev = lane.textContent;
-      lane.textContent = msg;
-      setTimeout(() => lane.textContent = prev, 900);
-    }
+    $("btnRun").addEventListener("click", async ()=>{
+      setStatus("running…");
+      const out = {};
 
-    // Add buttons (minimal prompts, no storage)
-    $("#addJobBtn").addEventListener("click", () => addCard("jobs", "Job"));
-    $("#addPersonBtn").addEventListener("click", () => addCard("people", "Person"));
-    $("#addFamilyBtn").addEventListener("click", () => addCard("family", "Family"));
+      try{
+        // 1) Auth user
+        const { data: uWrap, error: userErr } = await supabase.auth.getUser();
+        const user = uWrap?.user || null;
 
-    function addCard(listKey, label){
-      const title = prompt(`${label} title:`) || "";
-      if(!title.trim()) return;
-      const context = prompt(`${label} context (short):`) || "";
-      state[listKey].unshift({
-        id: `${listKey}-${Date.now()}`,
-        title: title.trim(),
-        context: context.trim(),
-        checklist: []
-      });
-      renderAll();
-    }
+        out.user = user ? { id:user.id, email:user.email } : null;
+        out.userErr = userErr || null;
 
-    // Money pulse minimal set
-    function setBonus(amount){
-      state.money.bonus = amount;
-      $("#bonusKpi").textContent = amount ? `$${amount}` : `$—`;
-    }
+        if(!user){
+          setStatus("no session (sign in first)");
+          print(out);
+          return;
+        }
 
-    // Escape
-    function escapeHtml(str){
-      return String(str)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
-    }
+        // 2) households (expects: households.id, households.name)
+        const { data: households, error: householdsErr } = await supabase
+          .from("households")
+          .select("id,name")
+          .order("name", { ascending: true });
 
-    function renderAll(){
-      renderDots();
-      renderToday();
-      renderCards("jobs", "#jobsList", "Job");
-      renderCards("people", "#peopleList", "Person");
-      renderCards("family", "#familyList", "Family");
-      setBonus(state.money.bonus);
-      $("#dueKpi").textContent = "Car ins end-month";
-      $("#mode").textContent = "Human";
-    }
+        out.households = households || null;
+        out.householdsErr = householdsErr || null;
+
+        // 3) household_members (expects: created_at exists here; FK join to households)
+        const { data: members, error: membersErr } = await supabase
+          .from("household_members")
+          .select("id,created_at,household_id,user_id,role,households:household_id(id,name)")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        out.household_members = members || null;
+        out.household_membersErr = membersErr || null;
+
+        // quick “which household am I in” pill
+        const first = members?.[0]?.households?.name || members?.[0]?.household_id || null;
+        $("housePill").textContent = first ? `household: ${first}` : "household: none";
+
+        setStatus("done");
+        print(out);
+      }catch(e){
+        setStatus("fatal");
+        out.fatal = { message: e?.message || String(e) };
+        print(out);
+      }
+    });
+
+    // React to auth changes (magic link landing)
+    supabase.auth.onAuthStateChange(async (_event, _session)=>{
+      const { data } = await supabase.auth.getUser();
+      const user = data?.user || null;
+      setSessionUI(user);
+    });
 
     // Boot
-    renderAll();
-
-    // Small touch: swipe down closes modals? (simple ESC via key for desktop)
-    window.addEventListener("keydown", (e) => {
-      if(e.key === "Escape"){
-        modal.classList.remove("on");
-        debrief.classList.remove("on");
-      }
-    });
+    await bootUser();
   </script>
-
-</script>
-
-<!-- SMOKE TEST (Supabase) -->
-<section id="smokeWrap">
-  <div id="smokeHeader">
-    <div>
-      <div id="smokeTitle">SMOKE TEST</div>
-      <div id="smokeSub">Supabase auth + households + household_members</div>
-    </div>
-    <button id="smokeCloseBtn" type="button">Close</button>
-  </div>
-
-  <div id="smokeBtns">
-    <button id="btnEmail" type="button">Email Link</button>
-    <button id="btnRun" type="button">Run Queries</button>
-    <button id="btnOut" type="button">Sign Out</button>
-    <span id="smokeStatus">idle</span>
-  </div>
-
-  <pre id="smokeOut">{}</pre>
-</section>
-
-/* SMOKE TEST (Supabase) */
-#smokeWrap{
-  margin:16px 0;
-  padding:14px;
-  border-radius:18px;
-  background: rgba(10,18,30,.60);
-  border: 1px solid rgba(140,180,220,.20);
-  backdrop-filter: blur(10px);
-}
-
-#smokeHeader{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  margin-bottom:10px;
-}
-
-#smokeTitle{
-  font-weight:700;
-  letter-spacing:.08em;
-}
-
-#smokeSub{
-  opacity:.7;
-  font-size:.9em;
-  margin-top:4px;
-}
-
-#smokeCloseBtn{
-  padding:10px 12px;
-  border-radius:14px;
-  border:1px solid rgba(140,180,220,.25);
-  background: rgba(0,0,0,.25);
-  color: inherit;
-}
-
-#smokeBtns{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  flex-wrap:wrap;
-  margin: 8px 0 10px;
-}
-
-#smokeBtns button{
-  padding:10px 12px;
-  border-radius:14px;
-  border:1px solid rgba(140,180,220,.25);
-  background: rgba(0,0,0,.20);
-  color: inherit;
-}
-
-#smokeStatus{
-  margin-left:auto;
-  opacity:.75;
-  font-size:.9em;
-}
-
-#smokeOut{
-  margin:0;
-  padding:12px;
-  border-radius:14px;
-  background: rgba(0,0,0,.35);
-  border:1px solid rgba(140,180,220,.15);
-  overflow:auto;
-  max-height: 340px;
-  font-size: .92em;
-  line-height: 1.35em;
-  white-space: pre-wrap;
-}
-
-<script type="module">
-  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
-  // === YOUR SUPABASE INFO (filled in) ===
-  const supabaseUrl = "https://pgqfnpnrgadhzvueqorr.supabase.co";
-  const supabaseAnonKey =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBncWZucG5yZ2FkaHp2dWVxb3JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MzM5MzIsImV4cCI6MjA4MTMwOTkzMn0.e12HE7pRB-WGO5Dv_DssKK8OH3Y-A0AxZub5bX2WSR0";
-
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      detectSessionInUrl: true,   // <-- magic link completes on page load
-      autoRefreshToken: true
-    }
-  });
-
-  // === DOM helpers ===
-  const el = (id) => document.getElementById(id);
-  const status = (s) => (el("smokeStatus").textContent = s);
-  const print = (obj) => (el("smokeOut").textContent = JSON.stringify(obj, null, 2));
-
-  // Close just hides the section (you can wire this to your modal if you want)
-  el("smokeCloseBtn").addEventListener("click", () => {
-    el("smokeWrap").style.display = "none";
-  });
-
-  // === 1) Email link ===
-  el("btnEmail").addEventListener("click", async () => {
-    try {
-      status("sending link...");
-      const email = prompt("Email for magic link:");
-      if (!email) return status("cancelled");
-
-      // Must be the page you're currently on (GitHub Pages)
-      const redirectTo = window.location.origin + window.location.pathname;
-
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: redirectTo }
-      });
-
-      if (error) throw error;
-      status("email sent (check inbox)");
-    } catch (e) {
-      status("error");
-      print({ step: "Email Link", error: { message: e?.message || String(e) } });
-    }
-  });
-
-  // === 2) Sign out ===
-  el("btnOut").addEventListener("click", async () => {
-    try {
-      status("signing out...");
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      status("signed out");
-      print({ signedOut: true });
-    } catch (e) {
-      status("error");
-      print({ step: "Sign Out", error: { message: e?.message || String(e) } });
-    }
-  });
-
-  // === 3) Run Queries (this is your real smoke test) ===
-  el("btnRun").addEventListener("click", async () => {
-    status("running...");
-    const out = {};
-
-    try {
-      // Auth user
-      const { data: uWrap, error: userErr } = await supabase.auth.getUser();
-      const user = uWrap?.user || null;
-
-      out.user = user ? { id: user.id, email: user.email } : null;
-      out.userErr = userErr || null;
-
-      if (!user) {
-        status("no session (sign in first)");
-        print(out);
-        return;
-      }
-
-      // Households
-      // NOTE: no trailing commas in select string
-      const { data: households, error: householdsErr } = await supabase
-        .from("households")
-        .select("id,name")
-        .order("name", { ascending: true });
-
-      out.households = households || null;
-      out.householdsErr = householdsErr || null;
-
-      // Household members (FK join -> households)
-      const { data: members, error: membersErr } = await supabase
-        .from("household_members")
-        .select("id,created_at,household_id,user_id,role,households:household_id(id,name)")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      out.household_members = members || null;
-      out.household_membersErr = membersErr || null;
-
-      status("done");
-      print(out);
-    } catch (e) {
-      status("error");
-      out.fatal = { message: e?.message || String(e) };
-      print(out);
-    }
-  });
-
-  // Auto show current session status on load (so you see magic-link completion)
-  (async () => {
-    status("boot...");
-    const { data: uWrap, error } = await supabase.auth.getUser();
-    const user = uWrap?.user || null;
-    print({
-      boot: true,
-      user: user ? { id: user.id, email: user.email } : null,
-      userErr: error || null
-    });
-    status(user ? "signed in" : "no session");
-  })();
-</script>          
-
-          
 </body>
-</html> 
+</html>
