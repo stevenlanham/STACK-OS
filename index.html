@@ -776,6 +776,43 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 <!-- Paste near the end of your HTML, right before </body>. If you already loaded supabase-js elsewhere, delete the next line. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+          // ===== SMOKE TEST: FIXED QUERIES =====
+async function runSmokeQueries() {
+  const out = (obj) => {
+    const el = document.querySelector("#stOut"); // if your output box uses a different id, change this
+    if (el) el.textContent = JSON.stringify(obj, null, 2);
+  };
+
+  // 1) user
+  const { data: userData, error: userErr } = await supabase.auth.getUser();
+  const user = userData?.user ?? null;
+
+  // 2) households (NO parentheses, NO trailing comma)
+  // IMPORTANT: change "Name" -> "name" if your actual column is lowercase.
+  const { data: households, error: householdsErr } = await supabase
+    .from("households")
+    .select("id,Name")
+    .order("Name", { ascending: true });
+
+  // 3) household_members (filter by signed-in user)
+  const { data: household_members, error: household_membersErr } = await supabase
+    .from("household_members")
+    .select("id,household_id,user_id,role,created_at")
+    .eq("user_id", user?.id ?? "");
+
+  out({
+    user: user ? { id: user.id, email: user.email } : null,
+    userErr,
+    households,
+    householdsErr,
+    household_members,
+    household_membersErr
+  });
+}
+
+// If your Run Queries button has id="stRun", wire it up:
+document.querySelector("#stRun")?.addEventListener("click", runSmokeQueries);
+
 <script>
 (() => {
   // Your Supabase project (filled)
