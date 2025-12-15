@@ -772,140 +772,27 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     });
   </script>
 
-<!-- STACK 4.3 — Supabase Smoke Test (PRE-FILLED) -->
-<!-- Paste near the end of your HTML, right before </body>. If you already loaded supabase-js elsewhere, delete the next line. -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-          // ===== SMOKE TEST: FIXED QUERIES =====
-async function runSmokeQueries() {
-  const out = (obj) => {
-    const el = document.querySelector("#stOut"); // if your output box uses a different id, change this
-    if (el) el.textContent = JSON.stringify(obj, null, 2);
-  };
-
-  // 1) user
-  const { data: userData, error: userErr } = await supabase.auth.getUser();
-  const user = userData?.user ?? null;
-
-  // 2) households (NO parentheses, NO trailing comma)
-  // IMPORTANT: change "Name" -> "name" if your actual column is lowercase.
-  const { data: households, error: householdsErr } = await supabase
-    .from("households")
-    .select("id,Name")
-    .order("Name", { ascending: true });
-
-  // 3) household_members (filter by signed-in user)
-  const { data: household_members, error: household_membersErr } = await supabase
-    .from("household_members")
-    .select("id,household_id,user_id,role,created_at")
-    .eq("user_id", user?.id ?? "");
-
-  out({
-    user: user ? { id: user.id, email: user.email } : null,
-    userErr,
-    households,
-    householdsErr,
-    household_members,
-    household_membersErr
-  });
-}
-
-// If your Run Queries button has id="stRun", wire it up:
-document.querySelector("#stRun")?.addEventListener("click", runSmokeQueries);
-
-<script>
-(() => {
-  // Your Supabase project (filled)
-  const SUPABASE_URL = "https://pgqfnpnrgadhzvueqorr.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBncWZucG5yZ2FkaHp2dWVxb3JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MzM5MzIsImV4cCI6MjA4MTMwOTkzMn0.e12HE7pRB-WGO5Dv_DssKK8OH3Y-A0AxZub5bX2WSR0";
-
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  // ---- tiny on-screen panel (no console needed)
-  const el = document.createElement("div");
-  el.style.cssText = `
-    position:fixed; right:12px; bottom:92px; z-index:99999;
-    width:min(380px, calc(100vw - 24px));
-    background:rgba(15,22,32,.96); border:1px solid rgba(255,255,255,.14);
-    border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.55);
-    color:#e8eef7; font:12px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-    overflow:hidden;
-  `;
-  el.innerHTML = `
-    <div style="padding:10px 12px; display:flex; align-items:center; justify-content:space-between;">
-      <div style="font-weight:900; letter-spacing:.4px;">SMOKE TEST</div>
-      <button id="stClose" style="height:30px;padding:0 10px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(12,18,26,.9);color:#e8eef7;">Close</button>
-    </div>
-    <div style="padding:0 12px 10px; display:flex; gap:8px; flex-wrap:wrap;">
-      <button id="stEmail" style="height:34px;padding:0 10px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(12,18,26,.9);color:#e8eef7;">Email Link</button>
-      <button id="stRun" style="height:34px;padding:0 10px;border-radius:10px;border:1px solid rgba(125,211,252,.35);background:rgba(12,18,26,.9);color:#e8eef7;">Run Queries</button>
-      <button id="stOut" style="height:34px;padding:0 10px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(12,18,26,.9);color:#e8eef7;">Sign Out</button>
-      <span id="stStatus" style="margin-left:auto;color:rgba(232,238,247,.7);align-self:center;">idle</span>
-    </div>
-    <pre id="stLog" style="margin:0; padding:10px 12px; max-height:38vh; overflow:auto; background:rgba(10,14,20,.65); border-top:1px solid rgba(255,255,255,.08); white-space:pre-wrap;"></pre>
-  `;
-  document.body.appendChild(el);
-
-  const $ = (id) => document.getElementById(id);
-  const log = (obj) => { $("stLog").textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2); };
-  const status = (s) => { $("stStatus").textContent = s; };
-
-  $("stClose").onclick = () => el.remove();
-
-  // Email-only magic link (you click it, come back logged in)
-  $("stEmail").onclick = async () => {
-    const email = prompt("Email to send sign-in link:");
-    if (!email) return;
-    status("sending…");
-    const { data, error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.href }
-    });
-    log({ step: "signInWithOtp", data, error });
-    status(error ? "error" : "sent");
-  };
-
-  $("stOut").onclick = async () => {
-    status("signing out…");
-    const { error } = await supabase.auth.signOut();
-    log({ step: "signOut", error });
-    status(error ? "error" : "signed out");
-  };
-
-  $("stRun").onclick = async () => {
-    status("running…");
-
-    const { data: userWrap, error: userErr } = await supabase.auth.getUser();
-    const user = userWrap?.user || null;
-
-    const { data: households, error: hErr } = await supabase
-      .from("households")
-      .select("id,name,")
-      .order("created_at", { ascending: false })
-      .limit(20);
-
-    const { data: members, error: mErr } = await supabase
-      .from("household_members")
-      .select("id,household_id,user_id,role,created_at")
-      .order({ ascending: false })
-      .limit(20);
-
-    log({
-      user: user ? { id: user.id, email: user.email } : null,
-      userErr,
-      households,
-      householdsErr: hErr,
-      household_members: members,
-      household_membersErr: mErr
-    });
-
-    status("done");
-  };
-
-  // auto-run once on load so you immediately see what's blocked/unblocked
-  $("stRun").click();
-})();
 </script>
+
+<!-- SMOKE TEST (Supabase) -->
+<section id="smokeWrap">
+  <div id="smokeHeader">
+    <div>
+      <div id="smokeTitle">SMOKE TEST</div>
+      <div id="smokeSub">Supabase auth + households + household_members</div>
+    </div>
+    <button id="smokeCloseBtn" type="button">Close</button>
+  </div>
+
+  <div id="smokeBtns">
+    <button id="btnEmail" type="button">Email Link</button>
+    <button id="btnRun" type="button">Run Queries</button>
+    <button id="btnOut" type="button">Sign Out</button>
+    <span id="smokeStatus">idle</span>
+  </div>
+
+  <pre id="smokeOut">{}</pre>
+</section>
 
           
 </body>
