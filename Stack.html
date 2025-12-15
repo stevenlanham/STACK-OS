@@ -1,0 +1,1322 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>STACK-OS</title>
+
+  <style>
+    /* ===== STACK CSS (fixed :root) ===== */
+    :root {
+      --bg-main: #040712;
+      --bg-card: rgba(8, 13, 30, 0.96);
+      --bg-elevated: rgba(10, 18, 40, 0.98);
+      --border-soft: rgba(255, 255, 255, 0.06);
+      --border-strong: rgba(255, 255, 255, 0.14);
+
+      --text-main: #f7f7ff;
+      --text-muted: #a4a9c4;
+      --text-soft: #7b80a4;
+
+      --accent-green: #23ff8f;
+      --accent-teal: #3cf2ff;
+      --accent-pink: #ff6ca8;
+      --accent-orange: #ffb25c;
+      --accent-blue: #4cc3ff;
+      --accent-amber: #ffdd7a;
+
+      --family-steph: #ff7b9b;
+      --family-beck: #5bd8ff;
+      --family-wes: #ffc36c;
+      --family-june: #e58bff;
+
+      --radius-card: 18px;
+      --radius-pill: 999px;
+
+      --shadow-soft: 0 0 0 1px rgba(255, 255, 255, 0.04),
+                     0 18px 45px rgba(0, 0, 0, 0.75);
+    }
+
+    html, body { margin:0; padding:0; height:100%; }
+    body {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background:
+        radial-gradient(circle at top, #192452 0, transparent 55%),
+        radial-gradient(circle at bottom, #0c182f 0, #02040a 65%);
+      color: var(--text-main);
+    }
+    *, *::before, *::after { box-sizing: inherit; }
+
+    .stack-app {
+      min-height: 100vh;
+      padding: 16px 12px 32px;
+      display: flex;
+      justify-content: center;
+    }
+    .stack-main {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--border-soft);
+      box-shadow: var(--shadow-soft);
+      padding: 16px 16px 14px;
+      backdrop-filter: blur(26px);
+    }
+    .card-header {
+      display:flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap:12px;
+      margin-bottom: 10px;
+    }
+    .card-title {
+      margin:0;
+      font-size: 13px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--text-main);
+    }
+    .card-title__meta { opacity:.72; font-weight:400; }
+    .card-body { font-size: 13px; color: var(--text-main); }
+    .card-body p { margin:0 0 4px; }
+    .card-footer {
+      margin-top: 10px;
+      display:flex;
+      justify-content:flex-start;
+      gap:8px;
+      align-items:center;
+    }
+
+    /* COMMAND */
+    .card--command { padding-top: 18px; }
+    .card-header--command { align-items:center; }
+    .command-title-block { display:flex; flex-direction:column; gap:6px; }
+    .command-title {
+      margin:0;
+      font-size: 18px;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      background: radial-gradient(circle at top left, #5dfcff, #3cf2ff 30%, #7df9d8 55%, #f8f9ff 100%);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    .command-subtitle { margin:0; font-size:11px; color: var(--text-soft); }
+    .command-meta {
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-size:11px;
+      color: var(--text-muted);
+    }
+    .command-meta__separator { opacity:.55; }
+    .command-meta__tz { font-size:10px; opacity:.9; }
+
+    .command-actions { display:flex; flex-direction:column; gap:8px; }
+
+    /* Pills / buttons */
+    .status-pill {
+      border-radius: var(--radius-pill);
+      padding: 6px 14px;
+      border: none;
+      cursor: default;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #0c1e12;
+      background: radial-gradient(circle at top left, #23ff8f, #02f57a 42%, #16ff9b 100%);
+      box-shadow: 0 0 12px rgba(35, 255, 143, 0.65), 0 0 0 1px rgba(0, 0, 0, 0.6);
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 999px;
+      background: #0c1e12;
+      box-shadow: 0 0 8px rgba(12, 30, 18, 0.8);
+    }
+
+    .pill-button {
+      border-radius: var(--radius-pill);
+      padding: 6px 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      background: transparent;
+      color: var(--text-main);
+      cursor: pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      transition: background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, transform 0.08s ease;
+    }
+    .pill-button:hover {
+      background: rgba(255,255,255,0.06);
+      box-shadow: 0 0 12px rgba(255,255,255,0.12);
+      transform: translateY(-0.5px);
+    }
+    .pill-button--secondary {
+      background: rgba(39, 56, 104, 0.7);
+      border-color: rgba(117, 175, 255, 0.7);
+      box-shadow: 0 0 15px rgba(103, 184, 255, 0.55);
+    }
+    .pill-button--ghost {
+      background: transparent;
+      border-style: dashed;
+      border-color: rgba(255,255,255,0.32);
+      color: var(--text-muted);
+    }
+
+    /* AUTH STRIP (live on board) */
+    .auth-strip {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(140,180,220,.25);
+      background: rgba(0,0,0,.18);
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .auth-email {
+      flex: 1;
+      min-width: 220px;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(140,180,220,.25);
+      background: rgba(0,0,0,.25);
+      color: inherit;
+      outline: none;
+    }
+    .auth-status {
+      margin-left: auto;
+      font-size: 12px;
+      opacity: 0.85;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .ok { color: #9ff0b2; }
+    .bad { color: #ffb1b1; }
+
+    /* TODAY'S FOCUS */
+    .card--focus .focus-list {
+      list-style:none; margin:4px 0 0; padding:0;
+      display:flex; flex-direction:column; gap:6px;
+    }
+    .focus-item {
+      display:flex; align-items:center; gap:8px;
+      font-size:13px; color: var(--text-main);
+      padding:5px 8px;
+      border-radius: 10px;
+      background: radial-gradient(circle at left, rgba(81, 255, 156, 0.12), transparent 60%);
+    }
+    .focus-toggle {
+      width:18px; height:18px;
+      border-radius:999px;
+      border:1px solid rgba(137, 244, 191, 0.9);
+      background: radial-gradient(circle at center, rgba(19, 46, 34, 1), #050912 75%);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; flex-shrink:0;
+      box-shadow: 0 0 10px rgba(35, 255, 143, 0.4);
+    }
+    .focus-check {
+      width:8px; height:8px;
+      border-radius:999px;
+      background: transparent;
+      transition: background 0.14s ease, transform 0.14s ease;
+    }
+    .focus-text { flex:1; }
+    .focus-item.is-complete .focus-text { text-decoration: line-through; opacity: 0.55; }
+    .focus-item.is-complete .focus-check { background:#36ff96; transform: scale(0.9); }
+
+    /* BEFORE HEADING HOME (FIX: match JS expects .home-item/.home-toggle) */
+    .card--home {
+      border-color: rgba(255, 193, 120, 0.6);
+      box-shadow: 0 0 0 1px rgba(255, 193, 120, 0.14),
+                  0 18px 40px rgba(0, 0, 0, 0.8),
+                  0 0 22px rgba(255, 193, 120, 0.35);
+    }
+    .home-list {
+      list-style:none; margin:0; padding:0;
+      display:flex; flex-direction:column; gap:6px;
+    }
+    .home-item {
+      display:flex; align-items:center; gap:8px;
+      padding:6px 8px;
+      border-radius:10px;
+      background: radial-gradient(circle at left, rgba(255, 193, 120, 0.14), transparent 62%);
+    }
+    .home-toggle {
+      width:18px; height:18px;
+      border-radius:999px;
+      border:1px solid rgba(255, 193, 120, 0.9);
+      background: radial-gradient(circle at center, rgba(46, 30, 19, 1), #050912 75%);
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; flex-shrink:0;
+      box-shadow: 0 0 10px rgba(255, 193, 120, 0.35);
+    }
+    .home-check {
+      width:8px; height:8px;
+      border-radius:999px;
+      background: transparent;
+      transition: background 0.14s ease, transform 0.14s ease;
+    }
+    .home-text { flex:1; font-size: 13px; }
+    .home-item.is-complete .home-text { text-decoration: line-through; opacity: 0.55; }
+    .home-item.is-complete .home-check { background:#ffcc86; transform: scale(0.9); }
+
+    /* UPCOMING */
+    .card--upcoming {
+      border-color: rgba(86, 255, 158, 0.5);
+      box-shadow: 0 0 0 1px rgba(86, 255, 158, 0.16),
+                  0 18px 40px rgba(0, 0, 0, 0.8),
+                  0 0 26px rgba(86, 255, 158, 0.32);
+    }
+    .upcoming-group { margin-bottom: 10px; }
+    .upcoming-heading {
+      margin:2px 0 4px;
+      font-size:11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+    .upcoming-list {
+      list-style:none; margin:0; padding:0;
+      display:flex; flex-direction:column; gap:4px;
+    }
+    .upcoming-item { display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; }
+    .day-pill {
+      min-width:40px;
+      padding:4px 0;
+      border-radius: var(--radius-pill);
+      text-align:center;
+      font-size:11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color:#04120b;
+      background: radial-gradient(circle at top, var(--accent-green), #07f58e);
+      box-shadow: 0 0 14px rgba(86, 255, 158, 0.75);
+    }
+
+    /* FAMILY */
+    .card--family {
+      border-color: rgba(255, 125, 189, 0.7);
+      box-shadow: 0 0 0 1px rgba(255, 125, 189, 0.18),
+                  0 18px 40px rgba(0, 0, 0, 0.85),
+                  0 0 30px rgba(255, 125, 189, 0.5);
+    }
+    .family-list { display:flex; flex-direction:column; gap:6px; }
+    .family-row {
+      width:100%;
+      border-radius:999px;
+      padding:8px 12px;
+      border:1px solid rgba(255,255,255,0.12);
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:2px;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.14), transparent 55%),
+        radial-gradient(circle at bottom right, rgba(0, 0, 0, 0.7), transparent 65%);
+      cursor:pointer;
+      transition: transform 0.1s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+    .family-row:hover { transform: translateY(-1px); box-shadow: 0 0 16px rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.32); }
+    .family-name { font-size:11px; letter-spacing: 0.24em; text-transform: uppercase; }
+    .family-note { font-size:12px; color: var(--text-main); opacity:0.92; }
+    .family-row--steph .family-name { color: var(--family-steph); }
+    .family-row--beck  .family-name { color: var(--family-beck); }
+    .family-row--wesley .family-name { color: var(--family-wes); }
+    .family-row--june .family-name { color: var(--family-june); }
+
+    /* MONEY */
+    .card--money {
+      border-color: rgba(255, 108, 168, 0.72);
+      box-shadow: 0 0 0 1px rgba(255, 108, 168, 0.22),
+                  0 18px 40px rgba(0, 0, 0, 0.85),
+                  0 0 32px rgba(255, 108, 168, 0.55);
+      cursor: pointer;
+    }
+    .card--money .card-body { display:flex; flex-direction:column; gap:6px; }
+    .money-section h3 {
+      margin:0 0 2px;
+      font-size:11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+    .money-section ul { margin:0; padding-left:18px; font-size:13px; }
+
+    /* PARKING & PINGS */
+    .card--parking-pings {
+      border-color: rgba(89, 200, 255, 0.72);
+      box-shadow: 0 0 0 1px rgba(89, 200, 255, 0.25),
+                  0 18px 42px rgba(0, 0, 0, 0.85),
+                  0 0 28px rgba(89, 200, 255, 0.6);
+    }
+    .card-body--split {
+      display:grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap:10px;
+    }
+    .section-link {
+      width:100%;
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.16);
+      cursor:pointer;
+      background: rgba(6,12,26,0.9);
+      margin-bottom: 6px;
+      transition: box-shadow 0.16s ease, transform 0.08s ease, border-color 0.16s ease, background 0.16s ease;
+    }
+    .section-link__label { display:flex; flex-direction:column; gap:2px; text-align:left; }
+    .section-title { font-size:11px; letter-spacing: 0.22em; text-transform: uppercase; }
+    .section-subtitle { font-size:12px; color: var(--text-soft); }
+    .section-link__chevron { font-size:13px; opacity:0.75; }
+
+    .section-link--parking {
+      background:
+        radial-gradient(circle at top left, rgba(255, 209, 128, 0.22), transparent 60%),
+        radial-gradient(circle at bottom right, rgba(255, 84, 124, 0.2), transparent 65%),
+        rgba(10, 9, 24, 0.96);
+      border-color: rgba(255, 209, 128, 0.8);
+      box-shadow: 0 0 18px rgba(255, 168, 76, 0.72),
+                  0 0 0 1px rgba(255, 219, 153, 0.35);
+    }
+    .section-link--parking .section-title { color: var(--accent-amber); }
+
+    .section-link--pings {
+      background:
+        radial-gradient(circle at top left, rgba(92, 243, 255, 0.22), transparent 60%),
+        radial-gradient(circle at bottom right, rgba(255, 120, 210, 0.22), transparent 65%),
+        rgba(4, 11, 27, 0.96);
+      border-color: rgba(124, 200, 255, 0.85);
+      box-shadow: 0 0 18px rgba(119, 240, 255, 0.75),
+                  0 0 0 1px rgba(124, 200, 255, 0.55);
+    }
+    .section-link--pings .section-title { color: var(--accent-teal); }
+
+    .parking-list, .pings-list {
+      margin:0;
+      padding-left: 16px;
+      font-size: 13px;
+      color: var(--text-main);
+    }
+    .card-footer--rooms { justify-content: space-between; }
+    .rooms-label {
+      font-size: 11px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+    .rooms-chips { display:flex; gap:8px; }
+    .room-chip {
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(126, 210, 255, 0.7);
+      padding: 5px 12px;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      background: radial-gradient(circle at top, rgba(116, 216, 255, 0.32), rgba(2, 10, 26, 0.98));
+      color: var(--text-main);
+      cursor: pointer;
+      box-shadow: 0 0 16px rgba(116, 216, 255, 0.7);
+    }
+
+    /* PANEL LAYER */
+    .panel-layer {
+      position: fixed;
+      inset: 0;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      padding: 70px 14px 30px;
+      pointer-events:none;
+      opacity:0;
+      transition: opacity 0.18s ease;
+      z-index: 40;
+    }
+    .panel-layer.is-open { pointer-events:auto; opacity:1; }
+    .panel-backdrop {
+      position:absolute;
+      inset:0;
+      background: radial-gradient(circle at top, rgba(24, 41, 75, 0.92), rgba(3, 5, 15, 0.98));
+      opacity: 0.96;
+    }
+    .panel {
+      position: relative;
+      max-width: 720px;
+      width: 100%;
+      margin: 0 auto;
+      background: var(--bg-elevated);
+      border-radius: 20px;
+      border: 1px solid var(--border-strong);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09),
+                  0 28px 70px rgba(0, 0, 0, 0.95);
+      padding: 16px 16px 18px;
+      color: var(--text-main);
+      z-index: 1;
+      display:none;
+    }
+    .panel.is-active { display:block; }
+    .panel-header {
+      display:flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap:10px;
+      margin-bottom: 10px;
+    }
+    .panel-title {
+      margin:0;
+      font-size:16px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+    .panel-subtitle { margin:3px 0 0; font-size:11px; color: var(--text-soft); }
+    .panel-close {
+      border-radius: 999px;
+      width:26px; height:26px;
+      border: 1px solid rgba(255,255,255,0.32);
+      background: rgba(8, 13, 30, 0.9);
+      color: var(--text-main);
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .panel-body { font-size:13px; color: var(--text-main); }
+    .panel-body p { margin:0 0 6px; }
+    .panel-section-title {
+      margin:10px 0 4px;
+      font-size:11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-soft);
+    }
+    .panel-tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom: 10px; }
+    .panel-tab {
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(118, 194, 255, 0.7);
+      padding: 4px 10px;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      background: rgba(8, 13, 30, 0.9);
+      color: var(--text-soft);
+      cursor: pointer;
+    }
+    .panel-tab.is-active {
+      background: radial-gradient(circle at top, var(--accent-teal), #87f7ff);
+      color: #020611;
+      box-shadow: 0 0 16px rgba(120, 233, 255, 0.9);
+    }
+    .panel-helper { font-size:12px; color: var(--text-soft); }
+    .panel-textarea {
+      width:100%;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,0.22);
+      padding: 8px 10px;
+      margin: 6px 0;
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-main);
+      background: rgba(5, 10, 24, 0.96);
+    }
+    .panel-footnote { margin-top:4px; font-size:11px; color: var(--text-soft); }
+    .panel--money {
+      border-color: rgba(255, 108, 168, 0.9);
+      box-shadow: 0 0 0 1px rgba(255, 108, 168, 0.3),
+                  0 28px 80px rgba(0, 0, 0, 1),
+                  0 0 38px rgba(255, 108, 168, 0.8);
+    }
+
+    /* Event view helper (fix for your JS toggles) */
+    .event-view { display:none; }
+    .event-view.is-active { display:block; }
+
+    /* Interactivity hints */
+    [data-panel], .section-link, .room-chip, .family-row { touch-action: manipulation; }
+
+    @media (max-width: 640px) {
+      .card { padding:14px 14px 12px; }
+      .command-title { font-size: 16px; }
+      .card-header { flex-direction: column; align-items: flex-start; }
+      .command-actions { flex-direction: row; flex-wrap: wrap; }
+      .panel-layer { padding-top: 60px; }
+      .panel { border-radius: 18px; }
+      .auth-status { width:100%; margin-left: 0; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="stack-app">
+
+    <main class="stack-main">
+
+      <!-- COMMAND CENTER -->
+      <section class="card card--command">
+        <header class="card-header card-header--command">
+          <div class="command-title-block">
+            <h1 class="command-title">Command Center</h1>
+            <p class="command-subtitle">Local ops snapshot — tap a section and tell Rook what to update.</p>
+
+            <div class="command-meta">
+              <span id="command-date" class="command-meta__item">—</span>
+              <span class="command-meta__separator">·</span>
+              <span id="command-time" class="command-meta__item">—</span>
+              <span class="command-meta__tz" id="command-tz">—</span>
+            </div>
+          </div>
+
+          <div class="command-actions">
+            <button class="status-pill status-pill--online" type="button">
+              <span class="status-dot"></span>
+              <span class="status-text">Live · Operator Online</span>
+            </button>
+
+            <button class="pill-button pill-button--secondary" type="button" data-panel="debrief">
+              Rook Debrief ▸
+            </button>
+          </div>
+        </header>
+
+        <!-- LIVE AUTH (no modal) -->
+        <div class="auth-strip">
+          <input id="authEmail" class="auth-email" type="email" placeholder="your email (magic link)" autocomplete="email" />
+          <button id="btnLink" class="pill-button" type="button">Email Link</button>
+          <button id="btnOut" class="pill-button pill-button--ghost" type="button">Sign Out</button>
+          <div id="authStatus" class="auth-status">idle</div>
+        </div>
+
+      </section>
+
+      <!-- TODAY'S FOCUS -->
+      <section class="card card--focus">
+        <header class="card-header">
+          <h2 class="card-title">Today’s Focus <span class="card-title__meta">(max 3)</span></h2>
+        </header>
+
+        <ul class="focus-list">
+          <li class="focus-item">
+            <button class="focus-toggle" type="button"><span class="focus-check"></span></button>
+            <span class="focus-text">Finish Danville service calls.</span>
+          </li>
+          <li class="focus-item">
+            <button class="focus-toggle" type="button"><span class="focus-check"></span></button>
+            <span class="focus-text">Call Steph about tomorrow’s schedule.</span>
+          </li>
+          <li class="focus-item">
+            <button class="focus-toggle" type="button"><span class="focus-check"></span></button>
+            <span class="focus-text">Prep truck stock for Monday.</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- BEFORE HEADING HOME (FIXED to checklist markup your JS expects) -->
+      <section class="card card--home">
+        <header class="card-header">
+          <h2 class="card-title">Before Heading Home</h2>
+        </header>
+
+        <div class="card-body">
+          <ul class="home-list">
+            <li class="home-item">
+              <button class="home-toggle" type="button"><span class="home-check"></span></button>
+              <span class="home-text">Tell Steph one thing that went well today.</span>
+            </li>
+            <li class="home-item">
+              <button class="home-toggle" type="button"><span class="home-check"></span></button>
+              <span class="home-text">Check Beck’s backpack for notes.</span>
+            </li>
+            <li class="home-item">
+              <button class="home-toggle" type="button"><span class="home-check"></span></button>
+              <span class="home-text">Quick reset of living room and kitchen surfaces.</span>
+            </li>
+          </ul>
+        </div>
+
+        <footer class="card-footer">
+          <button class="pill-button pill-button--ghost" type="button">+ Add Item</button>
+        </footer>
+      </section>
+
+      <!-- UPCOMING (FIXED: add data-panel so clicks work) -->
+      <section class="card card--upcoming">
+        <header class="card-header">
+          <h2 class="card-title">Upcoming <span class="card-title__meta">(next 2 weeks)</span></h2>
+        </header>
+
+        <div class="upcoming-group">
+          <h3 class="upcoming-heading">This Week</h3>
+          <ul class="upcoming-list">
+            <li class="upcoming-item" data-panel="event-tball" role="button" tabindex="0">
+              <span class="day-pill">Tue</span>
+              <span class="upcoming-text">Beck T-ball practice — keep it light and fun.</span>
+            </li>
+            <li class="upcoming-item" data-panel="event-crawfordsville" role="button" tabindex="0">
+              <span class="day-pill">Thu</span>
+              <span class="upcoming-text">Service call in Crawfordsville — double-check truck stock.</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="upcoming-group">
+          <h3 class="upcoming-heading">Next Week</h3>
+          <ul class="upcoming-list">
+            <li class="upcoming-item" data-panel="event-ob" role="button" tabindex="0">
+              <span class="day-pill">Mon</span>
+              <span class="upcoming-text">Steph OB appointment — protect that window.</span>
+            </li>
+            <li class="upcoming-item" data-panel="event-familyday" role="button" tabindex="0">
+              <span class="day-pill">Sat</span>
+              <span class="upcoming-text">Family day at Mom’s — plan food and timing.</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- FAMILY FOCUS -->
+      <section class="card card--family">
+        <header class="card-header">
+          <h2 class="card-title">Family Focus</h2>
+        </header>
+
+        <div class="family-list">
+          <button class="family-row family-row--steph" type="button" data-panel="person-steph">
+            <span class="family-name">Steph</span>
+            <span class="family-note">Carrying a lot. Remember to ask how she’s really feeling.</span>
+          </button>
+
+          <button class="family-row family-row--beck" type="button" data-panel="person-beck">
+            <span class="family-name">Beck</span>
+            <span class="family-note">Celebrate small wins with reading and emotions.</span>
+          </button>
+
+          <button class="family-row family-row--wesley" type="button" data-panel="person-wesley">
+            <span class="family-name">Wesley</span>
+            <span class="family-note">Lean into play, patience, and good teamwork.</span>
+          </button>
+
+          <button class="family-row family-row--june" type="button" data-panel="person-june">
+            <span class="family-name">June</span>
+            <span class="family-note">Keep choices aligned with her landing.</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- MONEY PULSE -->
+      <section class="card card--money" data-panel="money-dashboard">
+        <header class="card-header">
+          <h2 class="card-title">Money Pulse</h2>
+        </header>
+
+        <div class="card-body">
+          <div class="money-section">
+            <h3 class="money-heading">This Week</h3>
+            <ul>
+              <li>Track paycheck and fuel/food spend.</li>
+              <li>Hold the buffer line; avoid overdraft if possible.</li>
+            </ul>
+          </div>
+
+          <div class="money-section">
+            <h3 class="money-heading">Watchpoints</h3>
+            <ul>
+              <li>Car insurance due near end of month.</li>
+              <li>Keep loan and debt moves aligned with June timeline.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- PARKING LOT & PINGS -->
+      <section class="card card--parking-pings">
+        <header class="card-header">
+          <h2 class="card-title">Parking Lot &amp; Pings</h2>
+        </header>
+
+        <div class="card-body card-body--split">
+          <div class="parking-summary">
+            <button class="section-link section-link--parking" type="button" data-panel="parking-room">
+              <div class="section-link__label">
+                <span class="section-title">Parking Lot</span>
+                <span class="section-subtitle">Big ideas parked until they’re ready to roll.</span>
+              </div>
+              <span class="section-link__chevron">▸</span>
+            </button>
+
+            <ul class="parking-list">
+              <li>Lean-to Phase 2 — future layout and materials.</li>
+              <li>Resin lamp shop — repeatable build process.</li>
+              <li>Spring storage system v2 — cleaner truck and shop flow.</li>
+            </ul>
+          </div>
+
+          <div class="pings-summary">
+            <button class="section-link section-link--pings" type="button" data-panel="pings-room">
+              <div class="section-link__label">
+                <span class="section-title">Pings</span>
+                <span class="section-subtitle">People and threads that need live touch.</span>
+              </div>
+              <span class="section-link__chevron">▸</span>
+            </button>
+
+            <ul class="pings-list">
+              <li>Vince — installs / standards.</li>
+              <li>Brit — schedule / support.</li>
+              <li>Jared — music / gigs.</li>
+              <li>Family group — weekends and plans.</li>
+            </ul>
+          </div>
+        </div>
+
+        <footer class="card-footer card-footer--rooms">
+          <span class="rooms-label">Rooms</span>
+          <div class="rooms-chips">
+            <button class="room-chip" type="button" data-panel="people-room">People ▸</button>
+            <button class="room-chip" type="button" data-panel="jobs-room">Jobs ▸</button>
+          </div>
+        </footer>
+      </section>
+
+    </main>
+
+    <!-- PANEL LAYER -->
+    <div class="panel-layer" aria-hidden="true">
+      <div class="panel-backdrop" data-panel-close></div>
+
+      <!-- Debrief -->
+      <section class="panel panel--debrief" data-panel-id="debrief" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <h2 class="panel-title">Rook Debrief</h2>
+          <button class="panel-close" type="button" data-panel-close aria-label="Close">×</button>
+        </header>
+
+        <div class="panel-tabs">
+          <button class="panel-tab is-active" type="button">Today</button>
+          <button class="panel-tab" type="button">Yesterday</button>
+          <button class="panel-tab" type="button">-2</button>
+          <button class="panel-tab" type="button">-3</button>
+          <button class="panel-tab" type="button">-4</button>
+          <button class="panel-tab" type="button">-5</button>
+          <button class="panel-tab" type="button">-6</button>
+          <button class="panel-tab" type="button">+1</button>
+        </div>
+
+        <div class="panel-body">
+          <p class="panel-helper">Quick field log: installs, home moves, distractions, wins. Keep it tight.</p>
+          <textarea class="panel-textarea" rows="6" placeholder="Drop today’s debrief here…"></textarea>
+          <p class="panel-footnote">Daily log: today plus last 7 days and tomorrow’s plan.</p>
+        </div>
+      </section>
+
+      <!-- Family panels -->
+      <section class="panel" data-panel-id="person-steph" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <div>
+            <h2 class="panel-title">Steph</h2>
+            <p class="panel-subtitle">Partner</p>
+          </div>
+          <button class="panel-close" type="button" data-panel-close aria-label="Close">×</button>
+        </header>
+        <div class="panel-body">
+          <h3 class="panel-section-title">Presence Check</h3>
+          <p>Slow down and really ask how she’s doing, not just how the day went.</p>
+        </div>
+      </section>
+
+      <section class="panel" data-panel-id="person-beck" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <div>
+            <h2 class="panel-title">Beck</h2>
+            <p class="panel-subtitle">Son</p>
+          </div>
+          <button class="panel-close" type="button" data-panel-close aria-label="Close">×</button>
+        </header>
+        <div class="panel-body">
+          <h3 class="panel-section-title">Presence Check</h3>
+          <p>Get on his level. Let him feel that you’re interested in his world, not just his behavior.</p>
+        </div>
+      </section>
+
+      <section class="panel" data-panel-id="person-wesley" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <div>
+            <h2 class="panel-title">Wesley</h2>
+            <p class="panel-subtitle">Son</p>
+          </div>
+          <button class="panel-close" type="button" data-panel-close aria-label="Close">×</button>
+        </header>
+        <div class="panel-body">
+          <h3 class="panel-section-title">Presence Check</h3>
+          <p>Join his play. Let him feel like a teammate, not just Beck’s brother.</p>
+        </div>
+      </section>
+
+      <section class="panel" data-panel-id="person-june" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <div>
+            <h2 class="panel-title">June</h2>
+            <p class="panel-subtitle">Sister</p>
+          </div>
+          <button class="panel-close" type="button" data-panel-close aria-label="Close">×</button>
+        </header>
+        <div class="panel-body">
+          <h3 class="panel-section-title">Watchpoint</h3>
+          <p>Choices now shape her landing. Keep home base warm and stable.</p>
+        </div>
+      </section>
+
+      <!-- Money dashboard -->
+      <section class="panel panel--money" data-panel-id="money-dashboard" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <div>
+            <h2 class="panel-title">Money Pulse — Dashboard</h2>
+            <p class="panel-subtitle">Weekly flow, buffers, and bills.</p>
+          </div>
+          <button class="panel-close" type="button" data-panel-close aria-label="Close">×</button>
+        </header>
+        <div class="panel-body">
+          <div class="panel-block">
+            <h3 class="panel-section-title">Weekly Flow</h3>
+            <textarea class="panel-textarea" rows="3"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- People room -->
+      <section class="panel panel--room" data-panel-id="people-room" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <div>
+            <h2 class="panel-title">People Room</h2>
+            <p class="panel-subtitle">Family and key relationships.</p>
+          </div>
+          <button class="panel-close" type="button" data-panel-close aria-label="Close">×</button>
+        </header>
+        <div class="panel-body panel-body--grid">
+          <button class="pill-button pill-button--ghost people-add" type="button">+ Add Person</button>
+        </div>
+      </section>
+
+      <!-- Jobs room -->
+      <section class="panel panel--room" data-panel-id="jobs-room" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <div>
+            <h2 class="panel-title">Jobs Room</h2>
+            <p class="panel-subtitle">Active and future work tracks.</p>
+          </div>
+          <button class="panel-close" type="button" data-panel-close aria-label="Close">×</button>
+        </header>
+        <div class="panel-body panel-body--stacked">
+          <button class="pill-button pill-button--ghost jobs-add" type="button">+ Add Job</button>
+        </div>
+      </section>
+
+      <!-- Parking room -->
+      <section class="panel panel--parking" data-panel-id="parking-room" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <div>
+            <h2 class="panel-title">Parking Lot</h2>
+            <p class="panel-subtitle">Drive-in lane for big ideas waiting their turn.</p>
+          </div>
+          <button class="panel-close" type="button" data-panel-close aria-label="Close">×</button>
+        </header>
+        <div class="panel-body panel-body--grid">
+          <button class="pill-button pill-button--ghost" type="button">+ Add Parking Space</button>
+        </div>
+      </section>
+
+      <!-- Pings room -->
+      <section class="panel panel--pings" data-panel-id="pings-room" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <div>
+            <h2 class="panel-title">Pings</h2>
+            <p class="panel-subtitle">City-grid for live conversations and touchpoints.</p>
+          </div>
+          <button class="panel-close" type="button" data-panel-close aria-label="Close">×</button>
+        </header>
+        <div class="panel-body panel-body--grid">
+          <button class="pill-button pill-button--ghost" type="button">+ Add Ping</button>
+        </div>
+      </section>
+
+      <!-- Event panels (so Upcoming opens something real) -->
+      <section class="panel panel--event" data-panel-id="event-tball" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <div><h2 class="panel-title">Beck T-ball Practice</h2><p class="panel-subtitle">This week · Evening</p></div>
+          <button class="panel-close" type="button" data-panel-close aria-label="Close">×</button>
+        </header>
+        <div class="panel-body">
+          <div class="panel-tabs event-tabs">
+            <button class="panel-tab is-active" type="button" data-event-mode="life">Life</button>
+            <button class="panel-tab" type="button" data-event-mode="work">Work</button>
+          </div>
+          <div class="event-view event-view--life is-active">
+            <h3 class="panel-section-title">Life Snapshot</h3>
+            <p>Keep it light and fun. Let Beck feel your presence, not your pressure.</p>
+          </div>
+          <div class="event-view event-view--work">
+            <h3 class="panel-section-title">Work Snapshot</h3>
+            <p>Wrap the day enough that you’re not half in, half out at practice.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel--event" data-panel-id="event-crawfordsville" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <div><h2 class="panel-title">Crawfordsville Service Call</h2><p class="panel-subtitle">This week · Daytime</p></div>
+          <button class="panel-close" type="button" data-panel-close aria-label="Close">×</button>
+        </header>
+        <div class="panel-body">
+          <div class="panel-tabs event-tabs">
+            <button class="panel-tab is-active" type="button" data-event-mode="work">Work</button>
+            <button class="panel-tab" type="button" data-event-mode="life">Life</button>
+          </div>
+          <div class="event-view event-view--work is-active">
+            <h3 class="panel-section-title">Work Snapshot</h3>
+            <p>Double-check truck stock, photos, and close-out steps before you roll.</p>
+          </div>
+          <div class="event-view event-view--life">
+            <h3 class="panel-section-title">Life Snapshot</h3>
+            <p>Keep the day from bleeding into home. One clear plan for after the call.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel--event" data-panel-id="event-ob" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <div><h2 class="panel-title">Steph OB Appointment</h2><p class="panel-subtitle">Next week · Protect that window</p></div>
+          <button class="panel-close" type="button" data-panel-close aria-label="Close">×</button>
+        </header>
+        <div class="panel-body">
+          <div class="panel-tabs event-tabs">
+            <button class="panel-tab is-active" type="button" data-event-mode="life">Life</button>
+            <button class="panel-tab" type="button" data-event-mode="work">Work</button>
+          </div>
+          <div class="event-view event-view--life is-active">
+            <h3 class="panel-section-title">Life Snapshot</h3>
+            <p>Be fully there. No calls, no distractions.</p>
+          </div>
+          <div class="event-view event-view--work">
+            <h3 class="panel-section-title">Work Snapshot</h3>
+            <p>Schedule around this block — not through it.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel--event" data-panel-id="event-familyday" role="dialog" aria-modal="true">
+        <header class="panel-header">
+          <div><h2 class="panel-title">Family Day at Mom’s</h2><p class="panel-subtitle">Next week · Weekend</p></div>
+          <button class="panel-close" type="button" data-panel-close aria-label="Close">×</button>
+        </header>
+        <div class="panel-body">
+          <div class="panel-tabs event-tabs">
+            <button class="panel-tab is-active" type="button" data-event-mode="life">Life</button>
+            <button class="panel-tab" type="button" data-event-mode="work">Work</button>
+          </div>
+          <div class="event-view event-view--life is-active">
+            <h3 class="panel-section-title">Life Snapshot</h3>
+            <p>Food, timing, kid energy. Show up steady and present.</p>
+          </div>
+          <div class="event-view event-view--work">
+            <h3 class="panel-section-title">Work Snapshot</h3>
+            <p>Protect Monday. Don’t let weekend chaos tax the week.</p>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /panel-layer -->
+  </div><!-- /stack-app -->
+
+  <!-- Supabase JS (v2) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // ====== SUPABASE CONFIG ======
+    // If you ever rotate keys, paste the new anon key locally here.
+    const SUPABASE_URL = "https://pgqfnpnrgadhzvueqorr.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBncWZucG5yZ2FkaHp2dWVxb3JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MzM5MzIsImV4cCI6MjA4MTMwOTkzMn0.e12HE7pRB-WGO5Dv_DssKK8OH3Y-A0AxZub5bX2WSR0";
+    // ============================
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+      // ===== AUTH (LIVE STRIP) =====
+      const authEmail = document.getElementById('authEmail');
+      const authStatus = document.getElementById('authStatus');
+      const btnLink = document.getElementById('btnLink');
+      const btnOut  = document.getElementById('btnOut');
+
+      function setAuthStatus(text, cls){
+        if(!authStatus) return;
+        authStatus.textContent = text;
+        authStatus.className = "auth-status " + (cls || "");
+      }
+
+      async function refreshSessionUI(){
+        setAuthStatus("checking…");
+        const { data, error } = await supabase.auth.getSession();
+        const session = data?.session ?? null;
+
+        if(error){
+          setAuthStatus("session error", "bad");
+          return null;
+        }
+
+        if(session?.user){
+          const email = session.user.email || "signed in";
+          setAuthStatus("signed in", "ok");
+          if(authEmail){
+            authEmail.value = email;
+            authEmail.disabled = true;
+          }
+          if(btnLink) btnLink.disabled = true;
+          if(btnOut) btnOut.disabled = false;
+        } else {
+          setAuthStatus("signed out", "");
+          if(authEmail){
+            authEmail.value = "";
+            authEmail.disabled = false;
+          }
+          if(btnLink) btnLink.disabled = false;
+          if(btnOut) btnOut.disabled = true;
+        }
+
+        return session;
+      }
+
+      async function emailLink(){
+        const email = (authEmail?.value || "").trim();
+        if(!email){
+          setAuthStatus("enter email", "bad");
+          return;
+        }
+
+        setAuthStatus("sending link…");
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            // must match this deployed file URL
+            emailRedirectTo: window.location.href
+          }
+        });
+
+        if(error){
+          setAuthStatus("error", "bad");
+        } else {
+          setAuthStatus("link sent", "ok");
+        }
+      }
+
+      async function signOut(){
+        setAuthStatus("signing out…");
+        const { error } = await supabase.auth.signOut();
+        if(error){
+          setAuthStatus("error", "bad");
+        } else {
+          setAuthStatus("signed out", "");
+        }
+        await refreshSessionUI();
+      }
+
+      if(btnLink) btnLink.addEventListener("click", emailLink);
+      if(btnOut)  btnOut.addEventListener("click", signOut);
+
+      // ===== PANEL CORE (your original JS) =====
+      var panelLayer = document.querySelector('.panel-layer');
+      var panels = document.querySelectorAll('.panel-layer .panel');
+      var openers = document.querySelectorAll('[data-panel]');
+      var closeButtons = document.querySelectorAll('[data-panel-close]');
+      var backdrop = document.querySelector('.panel-backdrop');
+
+      function openPanel(id) {
+        if (!panelLayer) return;
+        var target = panelLayer.querySelector('.panel[data-panel-id="' + id + '"]');
+        if (!target) return;
+
+        panels.forEach(function (panel) { panel.classList.remove('is-active'); });
+        target.classList.add('is-active');
+        panelLayer.classList.add('is-open');
+        panelLayer.setAttribute('aria-hidden', 'false');
+      }
+
+      function closePanels() {
+        if (!panelLayer) return;
+        panels.forEach(function (panel) { panel.classList.remove('is-active'); });
+        panelLayer.classList.remove('is-open');
+        panelLayer.setAttribute('aria-hidden', 'true');
+      }
+
+      openers.forEach(function (trigger) {
+        trigger.addEventListener('click', function () {
+          var id = trigger.getAttribute('data-panel');
+          if (id) openPanel(id);
+        });
+      });
+
+      closeButtons.forEach(function (btn) {
+        btn.addEventListener('click', function (event) {
+          event.preventDefault();
+          closePanels();
+        });
+      });
+
+      if (backdrop) backdrop.addEventListener('click', closePanels);
+
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') closePanels();
+      });
+
+      // Focus list
+      var focusItems = document.querySelectorAll('.focus-item');
+      focusItems.forEach(function (item) {
+        var toggle = item.querySelector('.focus-toggle');
+        if (!toggle) return;
+        toggle.addEventListener('click', function () {
+          item.classList.toggle('is-complete');
+        });
+      });
+
+      // Home checklist
+      var homeItems = document.querySelectorAll('.home-item');
+      homeItems.forEach(function (item) {
+        var toggle = item.querySelector('.home-toggle');
+        if (!toggle) return;
+        toggle.addEventListener('click', function () {
+          item.classList.toggle('is-complete');
+        });
+      });
+
+      // Live clock
+      var dateEl = document.getElementById('command-date');
+      var timeEl = document.getElementById('command-time');
+      var tzEl   = document.getElementById('command-tz');
+
+      function updateClock() {
+        var now = new Date();
+        if (dateEl) {
+          dateEl.textContent = now.toLocaleDateString(undefined, {
+            weekday:'short', month:'short', day:'numeric', year:'numeric'
+          });
+        }
+        if (timeEl) {
+          var h = String(now.getHours()).padStart(2,'0');
+          var m = String(now.getMinutes()).padStart(2,'0');
+          var s = String(now.getSeconds()).padStart(2,'0');
+          timeEl.textContent = h + ':' + m + ':' + s;
+        }
+        if (tzEl) {
+          try {
+            tzEl.textContent = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          } catch(e) {
+            tzEl.textContent = "Local";
+          }
+        }
+      }
+      updateClock();
+      setInterval(updateClock, 1000);
+
+      // Upcoming -> open event panels
+      var upcomingItems = document.querySelectorAll('.upcoming-item');
+      upcomingItems.forEach(function (item) {
+        item.addEventListener('click', function () {
+          var panelId = item.getAttribute('data-panel');
+          if (panelId) openPanel(panelId);
+        });
+      });
+
+      // Event panels: life/work toggle
+      var eventPanels = document.querySelectorAll('.panel--event');
+      eventPanels.forEach(function (panel) {
+        var tabs = panel.querySelectorAll('.event-tabs .panel-tab');
+        if (!tabs.length) return;
+
+        tabs.forEach(function (tab) {
+          tab.addEventListener('click', function () {
+            var mode = tab.getAttribute('data-event-mode');
+            if (!mode) return;
+
+            tabs.forEach(function (t) { t.classList.remove('is-active'); });
+            tab.classList.add('is-active');
+
+            var lifeView = panel.querySelector('.event-view--life');
+            var workView = panel.querySelector('.event-view--work');
+
+            if (lifeView && workView) {
+              lifeView.classList.remove('is-active');
+              workView.classList.remove('is-active');
+              if (mode === 'life') lifeView.classList.add('is-active');
+              if (mode === 'work') workView.classList.add('is-active');
+            }
+          });
+        });
+      });
+
+      // People room: add person
+      var peopleAddBtn = document.querySelector('.people-add');
+      var peopleRoomPanel = document.querySelector('[data-panel-id="people-room"]');
+      if (peopleAddBtn && peopleRoomPanel) {
+        var peopleGrid = peopleRoomPanel.querySelector('.panel-body--grid');
+        peopleAddBtn.addEventListener('click', function () {
+          if (!peopleGrid) return;
+          var name = prompt('New person name?');
+          if (!name) return;
+          var note = prompt('Short note or role for ' + name + '?') || 'New contact.';
+
+          var tile = document.createElement('button');
+          tile.className = 'room-tile';
+          tile.type = 'button';
+          tile.setAttribute('data-panel', 'debrief'); // placeholder target; you can wire real panels later
+          tile.innerHTML =
+            '<span class="room-tile__title">' + name + '</span>' +
+            '<span class="room-tile__note">' + note + '</span>';
+
+          peopleGrid.appendChild(tile);
+        });
+      }
+
+      // Jobs room: add job
+      var jobsAddBtn = document.querySelector('.jobs-add');
+      var jobsRoomPanel = document.querySelector('[data-panel-id="jobs-room"]');
+      if (jobsAddBtn && jobsRoomPanel) {
+        var jobsStack = jobsRoomPanel.querySelector('.panel-body--stacked');
+        jobsAddBtn.addEventListener('click', function () {
+          if (!jobsStack) return;
+          var title = prompt('New job / project name?');
+          if (!title) return;
+          var note = prompt('Short note for ' + title + '?') || 'New job track.';
+
+          var card = document.createElement('button');
+          card.className = 'room-card';
+          card.type = 'button';
+          card.setAttribute('data-panel', 'debrief'); // placeholder target; wire later
+          card.innerHTML =
+            '<span class="room-card__title">' + title + '</span>' +
+            '<span class="room-card__note">' + note + '</span>';
+
+          jobsStack.appendChild(card);
+        });
+      }
+
+      // Auto session refresh on load
+      refreshSessionUI();
+    });
+  </script>
+</body>
+</html>
