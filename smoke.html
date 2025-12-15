@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>STACK — Supabase Smoke Test</title>
+  <style>
+    :root{color-scheme:dark}
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;background:#0b1220;color:#e8eefc}
+    .wrap{max-width:920px;margin:24px auto;padding:0 14px}
+    .card{background:rgba(20,30,55,.55);border:1px solid rgba(140,180,220,.25);border-radius:16px;padding:14px;backdrop-filter:blur(10px)}
+    h1{margin:0 0 8px;font-size:18px;letter-spacing:.04em}
+    .muted{opacity:.75;font-size:13px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0}
+    input{flex:1;min-width:240px;padding:12px 12px;border-radius:12px;border:1px solid rgba(140,180,220,.25);background:rgba(0,0,0,.25);color:inherit}
+    button{padding:11px 12px;border-radius:12px;border:1px solid rgba(140,180,220,.25);background:rgba(0,0,0,.22);color:inherit;cursor:pointer}
+    button:active{transform:translateY(1px)}
+    #status{margin-left:auto;opacity:.8;font-size:13px}
+    pre{margin:0;white-space:pre-wrap;word-break:break-word;background:rgba(0,0,0,.25);border:1px solid rgba(140,180,220,.18);border-radius:12px;padding:12px;min-height:160px}
+    .ok{color:#9ff0b2}
+    .bad{color:#ffb1b1}
+    code{opacity:.9}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Supabase smoke test</h1>
+      <div class="muted">Email-link auth + household_members → households lookup (no fancy selects/orders)</div>
+
+      <div class="row">
+        <input id="email" type="email" placeholder="your email (magic link)" autocomplete="email" />
+        <button id="btnLink">Email Link</button>
+        <button id="btnRefresh">Refresh Session</button>
+        <button id="btnRun">Run Queries</button>
+        <button id="btnOut">Sign Out</button>
+        <div id="status">idle</div>
+      </div>
+
+      <pre id="out">{}</pre>
+      <div class="muted" style="margin-top:10px">
+        Pages URL format: <code>https://stevenlanham.github.io/STACK-OS/smoke.html</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase JS (v2) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ====== CONFIG (keep these two lines clean) ======
+    const SUPABASE_URL = "https://pgqfnpnrgadhzvueqorr.supabase.co";
+    const SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_KEY_HERE";
+    // ===============================================
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const $ = (id) => document.getElementById(id);
+    const status = (t, cls) => { $("status").textContent = t; $("status").className = cls || ""; };
+    const show = (obj) => { $("out").textContent = JSON.stringify(obj, null, 2); };
+
+    async function refreshSession(){
+      status("checking session…");
+      const { data, error } = await supabase.auth.getSession();
+      const session = data?.session ?? null;
+      show({ session, sessionErr: error || null });
+      status(session ? "signed in" : "signed out", session ? "ok" : "");
+      return session;
+    }
+
+    async function emailLink(){
+      const email = $("email").value.trim();
+      if(!email){ status("enter email", "bad"); return; }
+
+      status("sending link…");
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          // Important: this must match your Pages URL for THIS file
+          emailRedirectTo: window.location.href
+        }
+      });
+
+      show({ sentTo: email, data, err: error || null });
+      status(error ? "error" : "link sent", error ? "bad" : "ok");
+    }
+
+    async function runQueries(){
+      status("running…");
+      const session = await refreshSession();
+      const user = session?.user ?? null;
+
+      if(!user){
+        status("sign in first", "bad");
+        return;
+      }
+
+      // 1) household_members for this user (minimal select)
+      const { data: members, error: mErr } = await supabase
+        .from("household_members")
+        .select("household_id, role")
+        .eq("user_id", user.id);
+
+      const household_id = members?.[0]?.household_id ?? null;
+
+      // 2) households lookup by id (minimal select)
+      let household = null;
+      let hErr = null;
+
+      if(household_id){
+        const res = await supabase
+          .from("households")
+          .select("id, name")
+          .eq("id", household_id)
+          .maybeSingle();
+
+        household = res.data || null;
+        hErr = res.error || null;
+      }
+
+      show({
+        user: { id: user.id, email: user.email },
+        household_members: members ?? null,
+        household_id,
+        household,
+        memberErr: mErr || null,
+        householdErr: hErr || null
+      });
+
+      status("done", (mErr || hErr) ? "bad" : "ok");
+    }
+
+    async function signOut(){
+      status("signing out…");
+      const { error } = await supabase.auth.signOut();
+      show({ signedOut: !error, err: error || null });
+      status(error ? "error" : "signed out", error ? "bad" : "");
+    }
+
+    $("btnLink").addEventListener("click", emailLink);
+    $("btnRefresh").addEventListener("click", refreshSession);
+    $("btnRun").addEventListener("click", runQueries);
+    $("btnOut").addEventListener("click", signOut);
+
+    // auto refresh on load
+    refreshSession();
+  </script>
+</body>
+</html>
