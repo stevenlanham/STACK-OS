@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>STACK • Supabase Smoke Test</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 16px; }
+    button { padding: 10px 12px; margin: 6px 6px 6px 0; }
+    input { padding: 10px 12px; width: min(420px, 100%); }
+    pre { background:#0b1020; color:#d7e0ff; padding:12px; border-radius:10px; overflow:auto; }
+    .row { margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h2>Supabase Smoke Test</h2>
+
+  <div class="row">
+    <input id="email" type="email" placeholder="you@email.com" />
+  </div>
+
+  <div class="row">
+    <button id="btnLink">Email Link</button>
+    <button id="btnUser">Get User</button>
+    <button id="btnRun">Run Queries</button>
+    <button id="btnOut">Sign Out</button>
+  </div>
+
+  <pre id="out">Ready.</pre>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    // ✅ your project URL
+    const SUPABASE_URL = "https://pgqfnpnrgadhzvueqorr.supabase.co";
+
+    // ✅ paste your *anon* key here (NOT service_role)
+    const SUPABASE_ANON_KEY = "PASTE_YOUR_ANON_KEY_HERE";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const out = document.getElementById("out");
+    const log = (obj) => out.textContent = JSON.stringify(obj, null, 2);
+
+    async function getUser() {
+      const { data, error } = await supabase.auth.getUser();
+      return { user: data?.user ?? null, userErr: error ?? null };
+    }
+
+    document.getElementById("btnLink").onclick = async () => {
+      const email = document.getElementById("email").value.trim();
+      if (!email) return log({ error: "Enter an email first." });
+
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          // IMPORTANT: must be allowed in Supabase Auth Redirect URLs
+          emailRedirectTo: window.location.href
+        }
+      });
+
+      log({ action: "signInWithOtp", data, error });
+    };
+
+    document.getElementById("btnUser").onclick = async () => {
+      log(await getUser());
+    };
+
+    document.getElementById("btnOut").onclick = async () => {
+      const { error } = await supabase.auth.signOut();
+      log({ action: "signOut", error });
+    };
+
+    document.getElementById("btnRun").onclick = async () => {
+      const { user, userErr } = await getUser();
+      if (userErr || !user) return log({ user, userErr, note: "Not signed in yet." });
+
+      // 1) pull membership rows for THIS user
+      const { data: memberships, error: mErr } = await supabase
+        .from("household_members")
+        .select("*")
+        .eq("user_id", user.id);
+
+      // 2) pull households (simple * query so column-name quirks can't break it)
+      const { data: households, error: hErr } = await supabase
+        .from("households")
+        .select("*");
+
+      log({
+        user: { id: user.id, email: user.email },
+        household_members: memberships,
+        household_membersErr: mErr,
+        households,
+        householdsErr: hErr
+      });
+    };
+
+    // auto-check user on load
+    log(await getUser());
+  </script>
+</body>
+</html>
