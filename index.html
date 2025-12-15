@@ -794,6 +794,203 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   <pre id="smokeOut">{}</pre>
 </section>
 
+/* SMOKE TEST (Supabase) */
+#smokeWrap{
+  margin:16px 0;
+  padding:14px;
+  border-radius:18px;
+  background: rgba(10,18,30,.60);
+  border: 1px solid rgba(140,180,220,.20);
+  backdrop-filter: blur(10px);
+}
+
+#smokeHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:10px;
+}
+
+#smokeTitle{
+  font-weight:700;
+  letter-spacing:.08em;
+}
+
+#smokeSub{
+  opacity:.7;
+  font-size:.9em;
+  margin-top:4px;
+}
+
+#smokeCloseBtn{
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(140,180,220,.25);
+  background: rgba(0,0,0,.25);
+  color: inherit;
+}
+
+#smokeBtns{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin: 8px 0 10px;
+}
+
+#smokeBtns button{
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(140,180,220,.25);
+  background: rgba(0,0,0,.20);
+  color: inherit;
+}
+
+#smokeStatus{
+  margin-left:auto;
+  opacity:.75;
+  font-size:.9em;
+}
+
+#smokeOut{
+  margin:0;
+  padding:12px;
+  border-radius:14px;
+  background: rgba(0,0,0,.35);
+  border:1px solid rgba(140,180,220,.15);
+  overflow:auto;
+  max-height: 340px;
+  font-size: .92em;
+  line-height: 1.35em;
+  white-space: pre-wrap;
+}
+
+<script type="module">
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+  // === YOUR SUPABASE INFO (filled in) ===
+  const supabaseUrl = "https://pgqfnpnrgadhzvueqorr.supabase.co";
+  const supabaseAnonKey =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBncWZucG5yZ2FkaHp2dWVxb3JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MzM5MzIsImV4cCI6MjA4MTMwOTkzMn0.e12HE7pRB-WGO5Dv_DssKK8OH3Y-A0AxZub5bX2WSR0";
+
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      detectSessionInUrl: true,   // <-- magic link completes on page load
+      autoRefreshToken: true
+    }
+  });
+
+  // === DOM helpers ===
+  const el = (id) => document.getElementById(id);
+  const status = (s) => (el("smokeStatus").textContent = s);
+  const print = (obj) => (el("smokeOut").textContent = JSON.stringify(obj, null, 2));
+
+  // Close just hides the section (you can wire this to your modal if you want)
+  el("smokeCloseBtn").addEventListener("click", () => {
+    el("smokeWrap").style.display = "none";
+  });
+
+  // === 1) Email link ===
+  el("btnEmail").addEventListener("click", async () => {
+    try {
+      status("sending link...");
+      const email = prompt("Email for magic link:");
+      if (!email) return status("cancelled");
+
+      // Must be the page you're currently on (GitHub Pages)
+      const redirectTo = window.location.origin + window.location.pathname;
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: redirectTo }
+      });
+
+      if (error) throw error;
+      status("email sent (check inbox)");
+    } catch (e) {
+      status("error");
+      print({ step: "Email Link", error: { message: e?.message || String(e) } });
+    }
+  });
+
+  // === 2) Sign out ===
+  el("btnOut").addEventListener("click", async () => {
+    try {
+      status("signing out...");
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      status("signed out");
+      print({ signedOut: true });
+    } catch (e) {
+      status("error");
+      print({ step: "Sign Out", error: { message: e?.message || String(e) } });
+    }
+  });
+
+  // === 3) Run Queries (this is your real smoke test) ===
+  el("btnRun").addEventListener("click", async () => {
+    status("running...");
+    const out = {};
+
+    try {
+      // Auth user
+      const { data: uWrap, error: userErr } = await supabase.auth.getUser();
+      const user = uWrap?.user || null;
+
+      out.user = user ? { id: user.id, email: user.email } : null;
+      out.userErr = userErr || null;
+
+      if (!user) {
+        status("no session (sign in first)");
+        print(out);
+        return;
+      }
+
+      // Households
+      // NOTE: no trailing commas in select string
+      const { data: households, error: householdsErr } = await supabase
+        .from("households")
+        .select("id,name")
+        .order("name", { ascending: true });
+
+      out.households = households || null;
+      out.householdsErr = householdsErr || null;
+
+      // Household members (FK join -> households)
+      const { data: members, error: membersErr } = await supabase
+        .from("household_members")
+        .select("id,created_at,household_id,user_id,role,households:household_id(id,name)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      out.household_members = members || null;
+      out.household_membersErr = membersErr || null;
+
+      status("done");
+      print(out);
+    } catch (e) {
+      status("error");
+      out.fatal = { message: e?.message || String(e) };
+      print(out);
+    }
+  });
+
+  // Auto show current session status on load (so you see magic-link completion)
+  (async () => {
+    status("boot...");
+    const { data: uWrap, error } = await supabase.auth.getUser();
+    const user = uWrap?.user || null;
+    print({
+      boot: true,
+      user: user ? { id: user.id, email: user.email } : null,
+      userErr: error || null
+    });
+    status(user ? "signed in" : "no session");
+  })();
+</script>          
+
           
 </body>
 </html> 
