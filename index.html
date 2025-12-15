@@ -843,14 +843,14 @@ const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const { data: households, error: hErr } = await supabase
       .from("households")
-      .select("id,name,is_demo,created_at")
+      .select("id,name,")
       .order("created_at", { ascending: false })
       .limit(20);
 
     const { data: members, error: mErr } = await supabase
       .from("household_members")
       .select("id,household_id,user_id,role,created_at")
-      .order("created_at", { ascending: false })
+      .order({ ascending: false })
       .limit(20);
 
     log({
