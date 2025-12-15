@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>STACK-OS 4.3 (Smoke Test)</title>
+  <style>
+    :root{
+      --bg1:#070b12;
+      --bg2:#091526;
+      --card: rgba(12,20,34,.55);
+      --card2: rgba(0,0,0,.30);
+      --stroke: rgba(140,180,220,.18);
+      --stroke2: rgba(140,180,220,.26);
+      --text: rgba(235,245,255,.92);
+      --muted: rgba(235,245,255,.65);
+      --pill: rgba(0,0,0,.35);
+      --tap: 56px;
+      --r: 18px;
+      --r2: 14px;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--font);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 900px at 20% 10%, rgba(70,140,220,.16), transparent 55%),
+        radial-gradient(1200px 900px at 80% 0%, rgba(120,80,255,.12), transparent 55%),
+        radial-gradient(1200px 900px at 50% 100%, rgba(0,255,200,.08), transparent 55%),
+        linear-gradient(180deg, var(--bg2), var(--bg1));
+      letter-spacing:.2px;
+    }
+
+    .wrap{
+      max-width:820px;
+      margin:0 auto;
+      padding:18px 14px 92px;
+    }
+
+    .top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-top:6px;
+      margin-bottom:16px;
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .brand h1{
+      margin:0;
+      font-size:34px;
+      letter-spacing:.4px;
+    }
+    .brand .sub{
+      font-size:14px;
+      color:var(--muted);
+    }
+
+    .presence{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.25);
+      box-shadow: var(--shadow);
+      font-size:14px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .dot{
+      width:9px;height:9px;border-radius:99px;
+      background: rgba(120,255,200,.9);
+      box-shadow: 0 0 12px rgba(120,255,200,.35);
+    }
+    .dot.off{
+      background: rgba(255,255,255,.25);
+      box-shadow:none;
+    }
+
+    .card{
+      background: var(--card);
+      border:1px solid var(--stroke);
+      border-radius: 22px;
+      padding:16px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .cardTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:8px;
+      gap:10px;
+    }
+    .cardTitle strong{
+      letter-spacing:.08em;
+      font-size:14px;
+      color: rgba(235,245,255,.90);
+    }
+    .small{
+      font-size:13px;
+      color:var(--muted);
+      line-height:1.35em;
+    }
+
+    .focusRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-top:10px;
+    }
+    .focusDots{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .focusDots button{
+      width:18px;height:18px;border-radius:99px;
+      border:1px solid var(--stroke2);
+      background: rgba(0,0,0,.25);
+      padding:0;
+    }
+    .focusDots button.on{
+      background: rgba(120,190,255,.9);
+      border-color: rgba(120,190,255,.9);
+      box-shadow: 0 0 10px rgba(120,190,255,.25);
+    }
+
+    .panel{
+      margin-top:16px;
+    }
+
+    .tabs{
+      position:fixed;
+      left:0;right:0;bottom:0;
+      padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(5,8,14,.75);
+      border-top:1px solid rgba(140,180,220,.16);
+      backdrop-filter: blur(12px);
+    }
+
+    .tabsInner{
+      max-width:820px;
+      margin:0 auto;
+      display:flex;
+      gap:10px;
+      justify-content:space-between;
+    }
+
+    .tabBtn{
+      flex:1;
+      height: var(--tap);
+      border-radius:16px;
+      border:1px solid rgba(140,180,220,.18);
+      background: rgba(0,0,0,.28);
+      color: rgba(235,245,255,.85);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:3px;
+      font-size:12px;
+      letter-spacing:.2px;
+    }
+    .tabBtn .ico{
+      font-size:18px;
+      line-height:18px;
+    }
+    .tabBtn.active{
+      background: rgba(20,40,70,.40);
+      border-color: rgba(140,180,220,.28);
+      box-shadow: 0 10px 18px rgba(0,0,0,.20);
+    }
+
+    .hidden{display:none !important;}
+
+    /* ===== SMOKE TEST MODAL ===== */
+    .modalBack{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.55);
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      padding:14px 14px calc(14px + env(safe-area-inset-bottom));
+      z-index:50;
+    }
+
+    .modal{
+      width:min(820px, 100%);
+      background: rgba(10,18,30,.80);
+      border: 1px solid rgba(140,180,220,.20);
+      border-radius: 22px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.45);
+      backdrop-filter: blur(12px);
+      padding:14px;
+    }
+
+    .smokeHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
+    }
+    .smokeHeader .title{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .smokeHeader .title strong{
+      letter-spacing:.08em;
+      font-size:14px;
+    }
+    .smokeHeader .title span{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .btn{
+      height:44px;
+      padding:0 12px;
+      border-radius:14px;
+      border:1px solid rgba(140,180,220,.25);
+      background: rgba(0,0,0,.25);
+      color: rgba(235,245,255,.90);
+      font-size:14px;
+    }
+
+    .smokeBtns{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin: 8px 0 10px;
+    }
+    .smokeStatus{
+      margin-left:auto;
+      color: var(--muted);
+      font-size:13px;
+    }
+
+    pre{
+      margin:0;
+      padding:12px;
+      border-radius:14px;
+      background: rgba(0,0,0,.35);
+      border:1px solid rgba(140,180,220,.15);
+      overflow:auto;
+      max-height: 46vh;
+      font-size: 13px;
+      line-height: 1.35em;
+      white-space: pre-wrap;
+    }
+
+    .row{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .pill{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.22);
+      color: var(--muted);
+      font-size:13px;
+    }
+    a, a:visited{color: rgba(120,190,255,.95)}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <h1>Stack</h1>
+        <div class="sub">Loading…</div>
+      </div>
+
+      <div class="presence" id="presencePill">
+        <span class="dot off" id="authDot"></span>
+        <span id="presenceText">Human • present</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="cardTitle">
+        <strong>TODAY’S FOCUS</strong>
+        <div class="focusDots" aria-label="focus toggles">
+          <button id="fWork" title="Work"></button>
+          <button id="fHome" title="Home"></button>
+          <button id="fBody" title="Body"></button>
+        </div>
+      </div>
+      <div class="small">
+        Work • Home • Body — toggle what’s “hot” today. (Dots persist only while page is open. Storage later.)
+      </div>
+    </div>
+
+    <div class="panel card" id="panelToday">
+      <div class="cardTitle">
+        <strong>TODAY</strong>
+        <span class="pill" id="sessionPill">session: none</span>
+      </div>
+      <div class="small">
+        This build is focused on one thing: <b>Supabase sign-in + read households + read household_members</b>.
+        Use the Money tab to open Smoke Test.
+      </div>
+      <div class="row">
+        <span class="pill" id="whoPill">user: none</span>
+        <span class="pill" id="housePill">household: unknown</span>
+      </div>
+    </div>
+
+    <div class="panel card hidden" id="panelJobs">
+      <div class="cardTitle"><strong>JOBS</strong></div>
+      <div class="small">Placeholder panel.</div>
+    </div>
+
+    <div class="panel card hidden" id="panelPeople">
+      <div class="cardTitle"><strong>PEOPLE</strong></div>
+      <div class="small">Placeholder panel.</div>
+    </div>
+
+    <div class="panel card hidden" id="panelFamily">
+      <div class="cardTitle"><strong>FAMILY</strong></div>
+      <div class="small">Placeholder panel.</div>
+    </div>
+
+    <div class="panel card hidden" id="panelMoney">
+      <div class="cardTitle">
+        <strong>MONEY</strong>
+        <button class="btn" id="openSmokeBtn" type="button">Open Smoke Test</button>
+      </div>
+      <div class="small">
+        Smoke Test lives here so you can verify auth + RLS + reads before we wire real app data.
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tabsInner">
+      <button class="tabBtn active" id="tabToday"><div class="ico">🎯</div>Today</button>
+      <button class="tabBtn" id="tabJobs"><div class="ico">🧰</div>Jobs</button>
+      <button class="tabBtn" id="tabPeople"><div class="ico">🤝</div>People</button>
+      <button class="tabBtn" id="tabFamily"><div class="ico">🏠</div>Family</button>
+      <button class="tabBtn" id="tabMoney"><div class="ico">📈</div>Money</button>
+    </div>
+  </div>
+
+  <!-- SMOKE TEST MODAL -->
+  <div class="modalBack hidden" id="smokeBack">
+    <div class="modal">
+      <div class="smokeHeader">
+        <div class="title">
+          <strong>SMOKE TEST</strong>
+          <span>Supabase auth + households + household_members</span>
+        </div>
+        <button class="btn" id="closeSmokeBtn" type="button">Close</button>
+      </div>
+
+      <div class="smokeBtns">
+        <button class="btn" id="btnEmail" type="button">Email Link</button>
+        <button class="btn" id="btnRun" type="button">Run Queries</button>
+        <button class="btn" id="btnOut" type="button">Sign Out</button>
+        <span class="smokeStatus" id="smokeStatus">idle</span>
+      </div>
+
+      <pre id="smokeOut">{}</pre>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    // =========================
+    // STACK 4.3 — SUPABASE CONFIG
+    // =========================
+    const supabaseUrl = "https://pgqfnpnrgadhzvueqorr.supabase.co";
+    const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBncWZucG5yZ2FkaHp2dWVxb3JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU3MzM5MzIsImV4cCI6MjA4MTMwOTkzMn0.e12HE7pRB-WGO5Dv_DssKK8OH3Y-A0AxZub5bX2WSR0; // <-- paste your anon key here
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        detectSessionInUrl: true,
+        autoRefreshToken: true
+      }
+    });
+
+    // =========================
+    // UI HELPERS
+    // =========================
+    const $ = (id) => document.getElementById(id);
+
+    function setStatus(s){ $("smokeStatus").textContent = s; }
+    function print(obj){ $("smokeOut").textContent = JSON.stringify(obj, null, 2); }
+
+    function show(id){ $(id).classList.remove("hidden"); }
+    function hide(id){ $(id).classList.add("hidden"); }
+
+    function setActiveTab(btnId){
+      const all = ["tabToday","tabJobs","tabPeople","tabFamily","tabMoney"];
+      all.forEach(id => $(id).classList.remove("active"));
+      $(btnId).classList.add("active");
+    }
+
+    function showPanel(panelId){
+      const panels = ["panelToday","panelJobs","panelPeople","panelFamily","panelMoney"];
+      panels.forEach(id => hide(id));
+      show(panelId);
+    }
+
+    // Focus dots (simple local toggles)
+    function toggleDot(id){
+      const b = $(id);
+      b.classList.toggle("on");
+    }
+    $("fWork").addEventListener("click", ()=>toggleDot("fWork"));
+    $("fHome").addEventListener("click", ()=>toggleDot("fHome"));
+    $("fBody").addEventListener("click", ()=>toggleDot("fBody"));
+
+    // Tabs wiring
+    $("tabToday").addEventListener("click", ()=>{ setActiveTab("tabToday"); showPanel("panelToday"); });
+    $("tabJobs").addEventListener("click",  ()=>{ setActiveTab("tabJobs");  showPanel("panelJobs");  });
+    $("tabPeople").addEventListener("click",()=>{ setActiveTab("tabPeople");showPanel("panelPeople");});
+    $("tabFamily").addEventListener("click",()=>{ setActiveTab("tabFamily");showPanel("panelFamily");});
+    $("tabMoney").addEventListener("click", ()=>{ setActiveTab("tabMoney"); showPanel("panelMoney"); });
+
+    // Smoke modal open/close
+    $("openSmokeBtn").addEventListener("click", ()=> show("smokeBack"));
+    $("closeSmokeBtn").addEventListener("click", ()=> hide("smokeBack"));
+    $("smokeBack").addEventListener("click", (e)=>{ if(e.target === $("smokeBack")) hide("smokeBack"); });
+
+    // Escape closes smoke modal
+    window.addEventListener("keydown", (e)=>{
+      if(e.key === "Escape") hide("smokeBack");
+    });
+
+    // =========================
+    // AUTH / SESSION DISPLAY
+    // =========================
+    function setSessionUI(user){
+      const has = !!user;
+      $("authDot").classList.toggle("off", !has);
+      $("sessionPill").textContent = has ? "session: active" : "session: none";
+      $("whoPill").textContent = has ? `user: ${user.email || user.id}` : "user: none";
+      if(!has) $("housePill").textContent = "household: unknown";
+    }
+
+    async function bootUser(){
+      const { data, error } = await supabase.auth.getUser();
+      const user = data?.user || null;
+
+      $(".brand .sub"); // no-op (keeps bundle clean)
+      setSessionUI(user);
+
+      print({
+        boot: true,
+        user: user ? { id: user.id, email: user.email } : null,
+        userErr: error || null
+      });
+
+      setStatus(user ? "signed in" : "no session");
+      return user;
+    }
+
+    // =========================
+    // SMOKE TEST ACTIONS
+    // =========================
+    $("btnEmail").addEventListener("click", async ()=>{
+      try{
+        setStatus("sending link…");
+        const email = prompt("Email for magic link:");
+        if(!email){ setStatus("cancelled"); return; }
+
+        // Must match GitHub Pages origin/path so the link returns to the app
+        const redirectTo = window.location.origin + window.location.pathname;
+
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: { emailRedirectTo: redirectTo }
+        });
+
+        if(error) throw error;
+        setStatus("email sent");
+        print({ step:"Email Link", ok:true, email, redirectTo });
+      }catch(e){
+        setStatus("error");
+        print({ step:"Email Link", error:{ message: e?.message || String(e) } });
+      }
+    });
+
+    $("btnOut").addEventListener("click", async ()=>{
+      try{
+        setStatus("signing out…");
+        const { error } = await supabase.auth.signOut();
+        if(error) throw error;
+        setStatus("signed out");
+        setSessionUI(null);
+        $("housePill").textContent = "household: unknown";
+        print({ step:"Sign Out", ok:true });
+      }catch(e){
+        setStatus("error");
+        print({ step:"Sign Out", error:{ message: e?.message || String(e) } });
+      }
+    });
+
+    $("btnRun").addEventListener("click", async ()=>{
+      setStatus("running…");
+      const out = {};
+
+      try{
+        // 1) Auth user
+        const { data: uWrap, error: userErr } = await supabase.auth.getUser();
+        const user = uWrap?.user || null;
+
+        out.user = user ? { id:user.id, email:user.email } : null;
+        out.userErr = userErr || null;
+
+        if(!user){
+          setStatus("no session (sign in first)");
+          print(out);
+          return;
+        }
+
+        // 2) households (expects: households.id, households.name)
+        const { data: households, error: householdsErr } = await supabase
+          .from("households")
+          .select("id,name")
+          .order("name", { ascending: true });
+
+        out.households = households || null;
+        out.householdsErr = householdsErr || null;
+
+        // 3) household_members (expects: created_at exists here; FK join to households)
+        const { data: members, error: membersErr } = await supabase
+          .from("household_members")
+          .select("id,created_at,household_id,user_id,role,households:household_id(id,name)")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        out.household_members = members || null;
+        out.household_membersErr = membersErr || null;
+
+        // quick “which household am I in” pill
+        const first = members?.[0]?.households?.name || members?.[0]?.household_id || null;
+        $("housePill").textContent = first ? `household: ${first}` : "household: none";
+
+        setStatus("done");
+        print(out);
+      }catch(e){
+        setStatus("fatal");
+        out.fatal = { message: e?.message || String(e) };
+        print(out);
+      }
+    });
+
+    // React to auth changes (magic link landing)
+    supabase.auth.onAuthStateChange(async (_event, _session)=>{
+      const { data } = await supabase.auth.getUser();
+      const user = data?.user || null;
+      setSessionUI(user);
+    });
+
+    // Boot
+    await bootUser();
+  </script>
+</body>
+</html>
