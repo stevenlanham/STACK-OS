@@ -292,31 +292,6 @@
       background: rgba(255,255,255,.08);
       margin: 12px 0;
     }
-
-    .launcher-mini{
-      position: fixed;
-      top: 12px;
-      right: 12px;
-      z-index: 50;
-      background: rgba(8,12,18,.92);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,.45);
-    }
-    .launcher-mini .title{
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .12em;
-      color: var(--muted);
-    }
-    .launcher-mini a{
-      display: block;
-      margin-top: 6px;
-      color: var(--accent);
-      text-decoration: none;
-    }
   </style>
 </head>
 
@@ -434,6 +409,15 @@
           </div>
           <div class="mt10 small muted">Check-ins, plans, outings, “don’t forget”.</div>
           <div class="list" id="familyList"></div>
+        </div>
+
+        <div class="card">
+          <div class="row space">
+            <h2>Before Heading Home</h2>
+            <button class="btn" id="addFamilyHomeBtn">+ Add</button>
+          </div>
+          <div class="mt10 small muted">Quick close-out checklist for the day.</div>
+          <div class="list" id="familyHomeList"></div>
         </div>
       </div>
     </section>
@@ -575,6 +559,11 @@
         { id:"t3", text:"Body maintenance: water + 10 min stretch / walk.", done:false },
         { id:"t4", text:"Work: hold standard, no ego. Presence > speed.", done:false },
       ],
+      familyHome: [
+        { id:"fh1", text:"Tell Steph one thing that went well today.", done:false },
+        { id:"fh2", text:"Check Beck’s backpack for notes.", done:false },
+        { id:"fh3", text:"Quick reset of living room and kitchen surfaces.", done:false },
+      ],
       jobs: [
         { id:"j1", title:"Warren Dairy", context:"Cold, heavy environment. Win with calm sequencing.", checklist:[
           {id:"c1", text:"Safety + access path (slip / manure / ice)", done:false},
@@ -657,6 +646,22 @@
       $("#kpiHome").textContent = `${homeCount}`;
     }
 
+    function renderFamilyHome(){
+      const wrap = $("#familyHomeList");
+      wrap.innerHTML = "";
+      state.familyHome.forEach(it => {
+        const el = document.createElement("div");
+        el.className = "item" + (it.done ? " done" : "");
+        el.dataset.id = it.id;
+        el.innerHTML = `<div class="box"></div><div class="txt">${escapeHtml(it.text)}</div>`;
+        el.addEventListener("click", () => {
+          it.done = !it.done;
+          renderFamilyHome();
+        });
+        wrap.appendChild(el);
+      });
+    }
+
     // Lists for Jobs / People / Family
     function renderCards(listKey, mountId, typeLabel){
       const mount = $(mountId);
@@ -736,6 +741,7 @@
     $("#addJobBtn").addEventListener("click", () => addCard("jobs", "Job"));
     $("#addPersonBtn").addEventListener("click", () => addCard("people", "Person"));
     $("#addFamilyBtn").addEventListener("click", () => addCard("family", "Family"));
+    $("#addFamilyHomeBtn").addEventListener("click", () => addFamilyHome());
 
     function addCard(listKey, label){
       const title = prompt(`${label} title:`) || "";
@@ -748,6 +754,17 @@
         checklist: []
       });
       renderAll();
+    }
+
+    function addFamilyHome(){
+      const text = prompt("Add before-heading-home item:") || "";
+      if(!text.trim()) return;
+      state.familyHome.unshift({
+        id: `fh-${Date.now()}`,
+        text: text.trim(),
+        done: false
+      });
+      renderFamilyHome();
     }
 
     // Money pulse minimal set
@@ -769,6 +786,7 @@
     function renderAll(){
       renderDots();
       renderToday();
+      renderFamilyHome();
       renderCards("jobs", "#jobsList", "Job");
       renderCards("people", "#peopleList", "Person");
       renderCards("family", "#familyList", "Family");
@@ -788,13 +806,5 @@
       }
     });
   </script>
-
-  <div class="launcher-mini">
-    <div class="title">Versions</div>
-    <a href="/versions/v0_4/">v0_4 (active)</a>
-    <a href="/versions/v0_3/">v0_3</a>
-    <a href="/versions/v0_2/">v0_2</a>
-    <a href="/versions/v0_1/">v0_1 (frozen)</a>
-  </div>
 </body>
 </html>

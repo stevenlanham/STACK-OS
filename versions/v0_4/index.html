@@ -1,0 +1,1739 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>STACK OS v0_4</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #05070c;
+        --panel: rgba(10, 14, 22, 0.92);
+        --panel-soft: rgba(12, 18, 28, 0.86);
+        --panel-warm: rgba(18, 14, 18, 0.92);
+        --text: #f3f6ff;
+        --muted: #9aa6bf;
+        --faint: #6a7488;
+        --teal: #34f5d1;
+        --teal-strong: #08cdb5;
+        --amber: #ffb15f;
+        --amber-strong: #ff7a2f;
+        --warm: #ffb6a3;
+        --warm-strong: #ff8d70;
+        --purple: #b894ff;
+        --line: rgba(255, 255, 255, 0.08);
+        --glass-line: rgba(255, 255, 255, 0.12);
+        --shadow: 0 22px 60px rgba(0, 0, 0, 0.48);
+        --radius: 20px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", "Sora", "Segoe UI", sans-serif;
+        background:
+          radial-gradient(1200px 520px at 20% -10%, rgba(8, 205, 181, 0.14), transparent 60%),
+          radial-gradient(900px 620px at 80% 5%, rgba(255, 122, 47, 0.12), transparent 58%),
+          radial-gradient(900px 800px at 50% 120%, rgba(184, 148, 255, 0.08), transparent 65%),
+          linear-gradient(180deg, #04060a 0%, #070a12 60%, #05070c 100%);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      .app {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 16px 96px;
+        gap: 18px;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .brand {
+        font-family: "Space Grotesk", "Sora", sans-serif;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        color: var(--muted);
+      }
+
+      .status-line {
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+
+      .signal-pill {
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(52, 245, 209, 0.08);
+        border: 1px solid rgba(52, 245, 209, 0.25);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--teal);
+      }
+
+      .screen {
+        display: none;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .screen.active {
+        display: flex;
+      }
+
+      .card {
+        position: relative;
+        padding: 18px;
+        border-radius: var(--radius);
+        background: linear-gradient(160deg, rgba(16, 22, 34, 0.92), rgba(8, 11, 18, 0.94));
+        border: 1px solid var(--glass-line);
+        box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(14px);
+        overflow: hidden;
+      }
+
+      .card.warm {
+        background: linear-gradient(160deg, rgba(24, 18, 24, 0.96), rgba(10, 11, 18, 0.94));
+        border-color: rgba(255, 182, 163, 0.3);
+        box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 182, 163, 0.12);
+      }
+
+      .card.systems {
+        background: linear-gradient(160deg, rgba(14, 20, 34, 0.96), rgba(8, 10, 18, 0.96));
+        border-color: rgba(184, 148, 255, 0.28);
+      }
+
+      .card.glow-teal {
+        border-color: rgba(52, 245, 209, 0.35);
+        box-shadow: var(--shadow), inset 0 0 0 1px rgba(52, 245, 209, 0.18);
+      }
+
+      .card.glow-amber {
+        border-color: rgba(255, 177, 95, 0.35);
+        box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 177, 95, 0.16);
+      }
+
+      .card-title {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-weight: 600;
+        font-size: 0.78rem;
+        margin-bottom: 12px;
+      }
+
+      .card-title .stack {
+        gap: 6px;
+      }
+
+      .card-subtitle {
+        text-transform: none;
+        letter-spacing: 0.02em;
+        font-weight: 400;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .timestamp {
+        font-size: 1.02rem;
+        font-weight: 600;
+      }
+
+      .subtle {
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .pill {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      .pill.teal {
+        color: var(--teal);
+        background: rgba(52, 245, 209, 0.12);
+        border-color: rgba(52, 245, 209, 0.3);
+      }
+
+      .pill.amber {
+        color: var(--amber);
+        background: rgba(255, 177, 95, 0.12);
+        border-color: rgba(255, 177, 95, 0.3);
+      }
+
+      .pill.warm {
+        color: var(--warm);
+        background: rgba(255, 182, 163, 0.12);
+        border-color: rgba(255, 182, 163, 0.3);
+      }
+
+      .pill.purple {
+        color: var(--purple);
+        background: rgba(184, 148, 255, 0.12);
+        border-color: rgba(184, 148, 255, 0.3);
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .ghost-btn,
+      .primary-btn {
+        border: none;
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 0.82rem;
+        cursor: pointer;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .primary-btn {
+        background: linear-gradient(135deg, rgba(52, 245, 209, 0.55), rgba(8, 205, 181, 0.7));
+        color: #001312;
+        font-weight: 600;
+      }
+
+      .ghost-btn {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .ghost-btn.warm {
+        border-color: rgba(255, 182, 163, 0.25);
+        color: var(--warm);
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(7, 10, 16, 0.8);
+        color: var(--text);
+        font-family: inherit;
+        font-size: 0.85rem;
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 90px;
+      }
+
+      .list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .list-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(11, 15, 24, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        cursor: pointer;
+      }
+
+      .list-text {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .list-title {
+        font-size: 0.88rem;
+        font-weight: 600;
+      }
+
+      .list-subtitle {
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+
+      .tag {
+        font-size: 0.66rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .check-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(7, 10, 16, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .check-row input {
+        width: 18px;
+        height: 18px;
+        margin: 0;
+      }
+
+      .section-label {
+        font-size: 0.7rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .segment {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .segment button {
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(7, 10, 16, 0.75);
+        padding: 8px 6px;
+        color: var(--muted);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        cursor: pointer;
+      }
+
+      .segment button.active {
+        color: #001312;
+        background: linear-gradient(135deg, rgba(52, 245, 209, 0.6), rgba(8, 205, 181, 0.7));
+        border-color: rgba(52, 245, 209, 0.45);
+      }
+
+      .mini-toggle {
+        border-radius: 12px;
+        padding: 8px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(7, 10, 16, 0.75);
+        color: var(--muted);
+        font-size: 0.74rem;
+        text-align: center;
+        cursor: pointer;
+      }
+
+      .mini-toggle.active {
+        color: #001312;
+        background: linear-gradient(135deg, rgba(255, 177, 95, 0.6), rgba(255, 122, 47, 0.7));
+        border-color: rgba(255, 177, 95, 0.45);
+      }
+
+      .micro-graphic {
+        position: absolute;
+        inset: 0;
+        opacity: 0.06;
+        pointer-events: none;
+      }
+
+      .micro-graphic svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .tabs {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(7, 10, 16, 0.92);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        padding: 8px 10px 18px;
+        gap: 6px;
+        backdrop-filter: blur(12px);
+      }
+
+      .tab-btn {
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        font-size: 0.7rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        padding: 8px 4px;
+        border-radius: 12px;
+        cursor: pointer;
+      }
+
+      .tab-btn.active {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .sheet-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 4, 8, 0.72);
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 16px;
+        backdrop-filter: blur(8px);
+      }
+
+      .sheet-backdrop.active {
+        display: flex;
+      }
+
+      .sheet {
+        width: min(560px, 100%);
+        background: rgba(10, 14, 22, 0.98);
+        border: 1px solid rgba(52, 245, 209, 0.2);
+        border-radius: 22px;
+        padding: 20px;
+        box-shadow: var(--shadow);
+      }
+
+      .sheet-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .sheet-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .sheet-subtitle {
+        color: var(--muted);
+        font-size: 0.85rem;
+        margin-top: 4px;
+      }
+
+      .icon-btn {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        border-radius: 12px;
+        padding: 6px 10px;
+        cursor: pointer;
+      }
+
+      .sheet-section {
+        display: none;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .sheet-section p {
+        margin: 0;
+        color: var(--text);
+        font-size: 0.86rem;
+        line-height: 1.5;
+      }
+
+      .sheet-section.active {
+        display: flex;
+      }
+
+      .sheet-actions {
+        margin-top: 16px;
+        display: flex;
+        justify-content: flex-end;
+      }
+
+      .locked {
+        opacity: 0.6;
+      }
+
+      @media (min-width: 720px) {
+        .app {
+          max-width: 720px;
+          margin: 0 auto;
+        }
+
+        .tabs {
+          left: 50%;
+          transform: translateX(-50%);
+          width: min(680px, 100%);
+          border-radius: 18px 18px 0 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <div>
+          <div class="brand">STACK 4.3</div>
+          <div class="status-line" id="statusLine">Neon glass ops online.</div>
+        </div>
+        <div class="signal-pill" id="timePill">00:00</div>
+      </header>
+
+      <section class="screen active" data-screen="today">
+        <div class="card glow-teal">
+          <div class="card-title">
+            <div class="stack">
+              <span>COMMAND CENTER</span>
+              <span class="card-subtitle">Local ops snapshot - tap a section and tell Rook what to update.</span>
+            </div>
+            <span class="pill teal" id="statusPill">LIVE - OPERATOR ONLINE</span>
+          </div>
+          <div class="row">
+            <div class="stack">
+              <span class="timestamp" id="dateLine">Today</span>
+              <span class="subtle" id="timeLine">00:00</span>
+            </div>
+            <div class="stack">
+              <span class="section-label">Signals</span>
+              <span class="subtle" id="signalCount">0 live / 0 parked</span>
+            </div>
+          </div>
+          <button class="primary-btn" id="rookDebrief">ROOK DEBRIEF &gt;</button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>TODAY'S FOCUS</span>
+            <span class="pill">MAX 3</span>
+          </div>
+          <div class="stack" id="focusList"></div>
+          <div class="row">
+            <input type="text" id="focusInput" placeholder="Add focus item" />
+            <button class="ghost-btn" id="focusAdd">ADD</button>
+          </div>
+        </div>
+
+        <div class="card warm">
+          <div class="card-title">
+            <span>BEFORE HEADING HOME</span>
+            <span class="pill warm">Checklist</span>
+          </div>
+          <div class="stack" id="homeChecklist"></div>
+          <div class="grid two">
+            <input type="text" id="homeChecklistInput" placeholder="Add home item" />
+            <button class="ghost-btn warm" id="homeChecklistAdd">+ ADD ITEM</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>UPCOMING (NEXT 2 WEEKS)</span>
+            <span class="pill">Timeline</span>
+          </div>
+          <div class="stack">
+            <div class="stack">
+              <span class="section-label">THIS WEEK</span>
+              <div class="list" id="upcomingThisWeek"></div>
+            </div>
+            <div class="stack">
+              <span class="section-label">NEXT WEEK</span>
+              <div class="list" id="upcomingNextWeek"></div>
+            </div>
+            <div class="grid two">
+              <input type="text" id="upcomingInput" placeholder="Add upcoming" />
+              <select id="upcomingBucket">
+                <option value="thisWeek">This Week</option>
+                <option value="nextWeek">Next Week</option>
+              </select>
+            </div>
+            <button class="ghost-btn" id="upcomingAdd">ADD UPCOMING</button>
+          </div>
+        </div>
+
+        <div class="card warm">
+          <div class="card-title">
+            <span>FAMILY FOCUS</span>
+            <span class="pill warm">Love-forward</span>
+          </div>
+          <div class="list" id="familyList"></div>
+        </div>
+
+        <div class="card systems">
+          <div class="card-title">
+            <span>MONEY PULSE</span>
+            <span class="pill amber" id="moneyStatus">LOCKED</span>
+          </div>
+          <div class="stack" id="moneySummary">
+            <div class="stack">
+              <span class="section-label">THIS WEEK</span>
+              <ul class="list" id="moneyWeekList"></ul>
+            </div>
+            <div class="stack">
+              <span class="section-label">WATCHPOINTS</span>
+              <ul class="list" id="moneyWatchList"></ul>
+            </div>
+          </div>
+          <div class="row">
+            <button class="ghost-btn" id="moneyOpen">OPEN DASHBOARD</button>
+            <button class="ghost-btn" id="moneyUnlock">UNLOCK</button>
+          </div>
+        </div>
+
+        <div class="card glow-amber">
+          <div class="micro-graphic">
+            <svg viewBox="0 0 320 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="parkingGlow" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#ffb15f" stop-opacity="0.5" />
+                  <stop offset="1" stop-color="#ff7a2f" stop-opacity="0.05" />
+                </linearGradient>
+              </defs>
+              <rect width="320" height="160" fill="url(#parkingGlow)" />
+              <g stroke="#ffb15f" stroke-opacity="0.6" stroke-width="1.5">
+                <path d="M40 30 V130" />
+                <path d="M70 30 V130" />
+                <path d="M100 30 V130" />
+                <path d="M130 30 V130" />
+                <path d="M160 30 V130" />
+                <path d="M190 30 V130" />
+                <path d="M220 30 V130" />
+                <path d="M250 30 V130" />
+                <path d="M30 40 H290" />
+                <path d="M30 120 H290" />
+              </g>
+            </svg>
+          </div>
+          <div class="card-title">
+            <div class="stack">
+              <span>PARKING LOT</span>
+              <span class="card-subtitle">Big ideas parked until they're ready to roll.</span>
+            </div>
+            <span class="pill amber">PARKED</span>
+          </div>
+          <div class="stack">
+            <input type="text" id="parkingInput" placeholder="Drop item" />
+            <div class="grid two">
+              <input type="text" id="parkingVibe" placeholder="Vibe (optional)" />
+              <select id="parkingKing">
+                <option value="Self">Self</option>
+                <option value="Steph">Steph</option>
+                <option value="Beck">Beck</option>
+                <option value="Wesley">Wesley</option>
+                <option value="Team">Team</option>
+              </select>
+            </div>
+            <button class="ghost-btn" id="parkingAdd">ADD TO PARKING</button>
+          </div>
+          <div class="stack" id="parkingList"></div>
+        </div>
+
+        <div class="card glow-teal">
+          <div class="micro-graphic">
+            <svg viewBox="0 0 320 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="pingsGlow" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#34f5d1" stop-opacity="0.5" />
+                  <stop offset="1" stop-color="#08cdb5" stop-opacity="0.05" />
+                </linearGradient>
+              </defs>
+              <rect width="320" height="160" fill="url(#pingsGlow)" />
+              <g stroke="#34f5d1" stroke-opacity="0.6" stroke-width="1">
+                <path d="M20 40 H300" />
+                <path d="M20 70 H300" />
+                <path d="M20 100 H300" />
+                <path d="M20 130 H300" />
+                <path d="M50 30 V140" />
+                <path d="M110 30 V140" />
+                <path d="M170 30 V140" />
+                <path d="M230 30 V140" />
+                <path d="M290 30 V140" />
+              </g>
+            </svg>
+          </div>
+          <div class="card-title">
+            <div class="stack">
+              <span>PINGS</span>
+              <span class="card-subtitle">City-grid for live conversations and touchpoints.</span>
+            </div>
+            <span class="pill teal">LIVE</span>
+          </div>
+          <div class="stack">
+            <input type="text" id="pingInput" placeholder="Add ping" />
+            <div class="grid two">
+              <select id="pingGroup">
+                <option value="People">People</option>
+                <option value="Comms">Comms</option>
+                <option value="Systems">Systems</option>
+              </select>
+              <button class="ghost-btn" id="pingAdd">+ ADD PING</button>
+            </div>
+          </div>
+          <div class="stack" id="pingList"></div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="work">
+        <div class="card">
+          <div class="card-title">
+            <span>JOBS</span>
+            <span class="pill">Tap for details</span>
+          </div>
+          <div class="stack">
+            <input type="text" id="jobInput" placeholder="Add job" />
+            <button class="ghost-btn" id="jobAdd">ADD JOB</button>
+          </div>
+          <div class="stack" id="jobList"></div>
+        </div>
+
+        <div class="card glow-teal">
+          <div class="card-title">
+            <span>STANDARDS / NOTES</span>
+            <span class="pill teal">Copy</span>
+          </div>
+          <textarea id="standardsNotes" placeholder="Capture standards or quick notes"></textarea>
+          <div class="row">
+            <span class="subtle">Quick copy to clipboard</span>
+            <button class="ghost-btn" id="copyStandards">COPY</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="home">
+        <div class="card warm">
+          <div class="card-title">
+            <span>FAMILY FOCUS</span>
+            <span class="pill warm">Presence</span>
+          </div>
+          <div class="list" id="familyListHome"></div>
+        </div>
+
+        <div class="card warm">
+          <div class="card-title">
+            <span>BEFORE HEADING HOME</span>
+            <span class="pill warm">Checklist</span>
+          </div>
+          <div class="stack" id="homeChecklistHome"></div>
+          <div class="grid two">
+            <input type="text" id="homeChecklistInputHome" placeholder="Add home item" />
+            <button class="ghost-btn warm" id="homeChecklistAddHome">+ ADD ITEM</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>UPCOMING (NEXT 2 WEEKS)</span>
+            <span class="pill">Timeline</span>
+          </div>
+          <div class="stack">
+            <div class="stack">
+              <span class="section-label">THIS WEEK</span>
+              <div class="list" id="upcomingThisWeekHome"></div>
+            </div>
+            <div class="stack">
+              <span class="section-label">NEXT WEEK</span>
+              <div class="list" id="upcomingNextWeekHome"></div>
+            </div>
+            <div class="grid two">
+              <input type="text" id="upcomingInputHome" placeholder="Add upcoming" />
+              <select id="upcomingBucketHome">
+                <option value="thisWeek">This Week</option>
+                <option value="nextWeek">Next Week</option>
+              </select>
+            </div>
+            <button class="ghost-btn" id="upcomingAddHome">ADD UPCOMING</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="body">
+        <div class="card">
+          <div class="card-title">
+            <span>TRAINING LOG</span>
+            <span class="pill">Track</span>
+          </div>
+          <div class="stack">
+            <div class="stack">
+              <span class="section-label">WORKOUT LOGGED</span>
+              <div class="segment" id="workoutSegment">
+                <button data-value="Upper">Upper</button>
+                <button data-value="Lower">Lower</button>
+                <button data-value="Full">Full</button>
+                <button data-value="Cardio">Cardio</button>
+              </div>
+            </div>
+            <div class="grid two">
+              <div class="stack">
+                <span class="section-label">CALORIE GOAL</span>
+                <input type="number" id="calorieGoal" placeholder="0" />
+              </div>
+              <div class="stack">
+                <span class="section-label">OPTIONAL</span>
+                <div class="grid three">
+                  <button class="mini-toggle" data-toggle="creatine">Creatine</button>
+                  <button class="mini-toggle" data-toggle="steps">Steps</button>
+                  <button class="mini-toggle" data-toggle="stretch">Stretch</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>RECOVERY</span>
+            <span class="pill">Tap</span>
+          </div>
+          <div class="grid three">
+            <button class="mini-toggle" data-toggle="recovery-sleep">Sleep</button>
+            <button class="mini-toggle" data-toggle="recovery-joints">Joints</button>
+            <button class="mini-toggle" data-toggle="recovery-training">Training</button>
+          </div>
+        </div>
+
+        <div class="card glow-teal">
+          <div class="card-title">
+            <span>FUEL</span>
+            <span class="pill teal">Checklist</span>
+          </div>
+          <div class="stack" id="fuelList"></div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="more">
+        <div class="card systems">
+          <div class="card-title">
+            <span>MINDSET</span>
+            <span class="pill purple">Focus</span>
+          </div>
+          <textarea id="mindsetNotes" placeholder="Quick mindset note"></textarea>
+        </div>
+
+        <div class="card systems">
+          <div class="card-title">
+            <span>STACK / SYSTEMS</span>
+            <span class="pill">Tune-up</span>
+          </div>
+          <textarea id="systemsNotes" placeholder="Systems checks and notes"></textarea>
+        </div>
+
+        <div class="card systems">
+          <div class="card-title">
+            <span>MONEY PULSE</span>
+            <span class="pill amber" id="moneyStatusMore">LOCKED</span>
+          </div>
+          <div class="row">
+            <span class="subtle" id="moneyPulseText">Pulse data locked.</span>
+            <button class="ghost-btn" id="moneyOpenMore">OPEN</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="today">Today</button>
+      <button class="tab-btn" data-tab="work">Work</button>
+      <button class="tab-btn" data-tab="home">Home</button>
+      <button class="tab-btn" data-tab="body">Body</button>
+      <button class="tab-btn" data-tab="more">More</button>
+    </nav>
+
+    <div class="sheet-backdrop" id="sheetBackdrop">
+      <div class="sheet" role="dialog" aria-modal="true">
+        <div class="sheet-header">
+          <div>
+            <div class="sheet-title" id="sheetTitle">Details</div>
+            <div class="sheet-subtitle" id="sheetSubtitle"></div>
+          </div>
+          <button class="icon-btn" id="sheetClose">X</button>
+        </div>
+        <div class="sheet-section" data-sheet="ping">
+          <span class="section-label">THREAD STATUS</span>
+          <div class="segment" id="pingStatus">
+            <button data-status="REACH OUT">REACH OUT</button>
+            <button data-status="WAITING BACK">WAITING BACK</button>
+            <button data-status="LOOP CLOSED">LOOP CLOSED</button>
+          </div>
+          <span class="section-label">NOTES</span>
+          <textarea id="pingNotes" placeholder="Notes"></textarea>
+        </div>
+
+        <div class="sheet-section" data-sheet="person">
+          <span class="section-label">PRESENCE CHECK</span>
+          <p id="personPresence"></p>
+          <span class="section-label">RECENT MOMENTS</span>
+          <ul class="list" id="personRecent"></ul>
+          <span class="section-label">WHAT THEY NEED</span>
+          <ul class="list" id="personNeeds"></ul>
+          <span class="section-label">NEXT WAY TO LOVE / SUPPORT</span>
+          <p id="personNext"></p>
+        </div>
+
+        <div class="sheet-section" data-sheet="job">
+          <span class="section-label">STATUS</span>
+          <p id="jobStatus"></p>
+          <span class="section-label">WATCHPOINTS</span>
+          <ul class="list" id="jobWatchpoints"></ul>
+          <span class="section-label">NEXT ACTION</span>
+          <p id="jobNext"></p>
+        </div>
+
+        <div class="sheet-section" data-sheet="parking">
+          <span class="section-label">KING</span>
+          <p id="parkingKingDetail"></p>
+          <span class="section-label">VIBE</span>
+          <p id="parkingVibeDetail"></p>
+          <span class="section-label">NOTES</span>
+          <textarea id="parkingNotes" placeholder="Notes"></textarea>
+        </div>
+
+        <div class="sheet-section" data-sheet="money">
+          <span class="section-label">WEEKLY FLOW</span>
+          <textarea id="moneyWeeklyFlow" placeholder="Weekly flow"></textarea>
+          <span class="section-label">BUFFERS & GOALS</span>
+          <textarea id="moneyBuffers" placeholder="Buffers and goals"></textarea>
+          <span class="section-label">UPCOMING BILLS</span>
+          <div class="list" id="moneyBills"></div>
+          <div class="grid two">
+            <input type="text" id="moneyBillInput" placeholder="Add bill" />
+            <button class="ghost-btn" id="moneyAddBill">+ ADD BILL</button>
+          </div>
+        </div>
+
+        <div class="sheet-section" data-sheet="debrief">
+          <span class="section-label">ROOK DEBRIEF</span>
+          <textarea id="rookNotes" placeholder="Leave a debrief note"></textarea>
+        </div>
+
+        <div class="sheet-actions">
+          <button class="ghost-btn" id="sheetCopy">COPY</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const STORAGE_KEYS = ["stackos_state_v0_4", "stackos_state_v0_3"];
+
+      const defaultState = {
+        focus: [
+          { text: "Finish Danville service calls.", done: false },
+          { text: "Call Steph about tomorrow's schedule.", done: false },
+          { text: "Prep truck stock for Monday.", done: false },
+        ],
+        focusMax: 3,
+        parking: [],
+        pings: [
+          {
+            id: "ping-vince",
+            title: "VINCE",
+            subtitle: "Installs, standards, and leadership cadence.",
+            group: "People",
+            threadStatus: "REACH OUT",
+            notes: "",
+          },
+          {
+            id: "ping-brit",
+            title: "BRIT",
+            subtitle: "Schedule, support, and clean info flow.",
+            group: "People",
+            threadStatus: "REACH OUT",
+            notes: "",
+          },
+          {
+            id: "ping-jared",
+            title: "JARED",
+            subtitle: "Music, gigs, and creative outlets.",
+            group: "People",
+            threadStatus: "REACH OUT",
+            notes: "",
+          },
+          {
+            id: "ping-shop",
+            title: "SHOP GROUP",
+            subtitle: "Crew chat, weekends, and plans.",
+            group: "Comms",
+            threadStatus: "REACH OUT",
+            notes: "",
+          },
+        ],
+        jobs: [
+          {
+            id: "job-danville",
+            title: "DANVILLE - SERVICE CALLS",
+            subtitle: "Active job track",
+            status:
+              "Working through remaining doors and issues, pushing toward clean close-out.",
+            watchpoints: [
+              "Track which doors still need adjustment or photos.",
+              "Double-check hardware and safety setups before leaving.",
+            ],
+            nextAction:
+              "One sweep list of remaining items and a final trip focused only on closing the loop.",
+          },
+        ],
+        family: [
+          {
+            name: "STEPH",
+            role: "Partner",
+            summary: "Carrying a lot. Remember to ask how she's really feeling.",
+            presence:
+              "Slow down and really ask how she's doing, not just how the day went.",
+            recent: [
+              "Carrying a lot between home, pregnancy, and day-to-day load.",
+              "Small pockets of time together land best when phones are away.",
+            ],
+            needs: [
+              "Reassurance that you see the weight she's carrying.",
+              "Clear plans so she doesn't have to manage everything in her head.",
+            ],
+            next:
+              "Pick one small thing to remove from her plate this week and actually do it.",
+          },
+          {
+            name: "BECK",
+            role: "Son",
+            summary: "Celebrate small wins with reading and emotions.",
+            presence:
+              "Get on his level. Let him feel that you're interested in his world, not just his behavior.",
+            recent: [
+              "Emotions can spike hard, but he comes back when he feels safe.",
+              "Reading time and stories land best when it stays fun.",
+            ],
+            needs: [
+              "Calm voice when he's loud.",
+              "Clear boundaries and quick recovery after tough moments.",
+              "Celebration for small wins instead of only corrections.",
+            ],
+            next:
+              "Pick one small thing he did right today and replay it back to him with pride.",
+          },
+          {
+            name: "WESLEY",
+            role: "Son",
+            summary: "Lean into play, patience, and good teamwork.",
+            presence: "Lead with play, then ask for teamwork.",
+            recent: ["He lights up when he feels like a teammate."],
+            needs: ["Clear lanes to help.", "Small wins called out quickly."],
+            next: "Invite him into one simple task and celebrate the teamwork.",
+          },
+          {
+            name: "JUNE",
+            role: "Family",
+            summary: "Keep choices aligned with her landing.",
+            presence: "Keep the landing steady and gentle.",
+            recent: ["Planning and steady care matter most right now."],
+            needs: ["Consistency and clear plans."],
+            next: "Protect the calm and keep the pace slow.",
+          },
+        ],
+        homeChecklist: [
+          { text: "Pick up milk on the way home.", done: false },
+          { text: "Call Dad and check in.", done: false },
+          { text: "Confirm rent / major bill is set.", done: false },
+        ],
+        upcoming: {
+          thisWeek: [
+            { id: "up-week-1", text: "TUE - Beck T-ball practice - keep it light and fun." },
+            { id: "up-week-2", text: "THU - Service call in Crawfordsville - double-check truck stock." },
+          ],
+          nextWeek: [
+            { id: "up-next-1", text: "MON - Steph OB appointment - protect that window." },
+            { id: "up-next-2", text: "SAT - Family day at Mom's - plan food and timing." },
+          ],
+        },
+        fuel: [
+          { text: "Protein", done: false },
+          { text: "Water", done: false },
+        ],
+        recovery: {
+          sleep: false,
+          joints: false,
+          training: false,
+        },
+        workout: "",
+        calorieGoal: "",
+        bodyToggles: {
+          creatine: false,
+          steps: false,
+          stretch: false,
+        },
+        standardsNotes: "",
+        mindsetNotes: "",
+        systemsNotes: "",
+        money: {
+          unlocked: false,
+          summaryWeek: ["Track paycheck and fuel/food spend.", "Hold the buffer line; avoid overdraft if possible."],
+          summaryWatch: [
+            "Car insurance due near end of month.",
+            "Keep loan and debt moves aligned with June timeline.",
+          ],
+          weeklyFlow: "",
+          buffers: "",
+          bills: [
+            "Car insurance - end of month.",
+            "Phone bill - mid-month.",
+          ],
+        },
+        rookDebrief: "",
+      };
+
+      const byId = (id) => document.getElementById(id);
+      const screens = document.querySelectorAll(".screen");
+      const tabs = document.querySelectorAll(".tab-btn");
+      const sheetBackdrop = byId("sheetBackdrop");
+      const sheetTitle = byId("sheetTitle");
+      const sheetSubtitle = byId("sheetSubtitle");
+      const sheetCopy = byId("sheetCopy");
+
+      const mergeState = (base, incoming) => {
+        if (!incoming) return base;
+        const merged = { ...base, ...incoming };
+        merged.focus = normalizeChecklist(incoming.focus || base.focus);
+        merged.homeChecklist = normalizeChecklist(incoming.homeChecklist || base.homeChecklist);
+        merged.fuel = normalizeChecklist(incoming.fuel || base.fuel);
+        merged.parking = Array.isArray(incoming.parking) ? incoming.parking : base.parking;
+        merged.pings = Array.isArray(incoming.pings) ? incoming.pings : base.pings;
+        merged.jobs = Array.isArray(incoming.jobs) ? incoming.jobs : base.jobs;
+        merged.family = mergeFamily(base.family, incoming.family);
+        merged.upcoming = normalizeUpcoming(incoming.upcoming || base.upcoming);
+        merged.recovery = { ...base.recovery, ...(incoming.recovery || {}) };
+        merged.bodyToggles = { ...base.bodyToggles, ...(incoming.bodyToggles || {}) };
+        merged.workout = incoming.workout || base.workout;
+        merged.calorieGoal = incoming.calorieGoal || base.calorieGoal;
+        merged.standardsNotes = incoming.standardsNotes || base.standardsNotes;
+        merged.mindsetNotes = incoming.mindsetNotes || base.mindsetNotes;
+        merged.systemsNotes = incoming.systemsNotes || base.systemsNotes;
+        merged.money = { ...base.money, ...(incoming.money || {}) };
+        if (typeof incoming.moneyUnlocked === "boolean" && incoming.money?.unlocked === undefined) {
+          merged.money.unlocked = incoming.moneyUnlocked;
+        }
+        merged.rookDebrief = incoming.rookDebrief || base.rookDebrief;
+        return merged;
+      };
+
+      const normalizeChecklist = (items) => {
+        if (!Array.isArray(items)) return [];
+        return items.map((item) => {
+          if (typeof item === "string") return { text: item, done: false };
+          return { text: item.text || "", done: Boolean(item.done) };
+        });
+      };
+
+      const normalizeUpcoming = (incoming) => {
+        if (Array.isArray(incoming)) {
+          return { thisWeek: incoming.map((item, index) => ({ id: `up-${index}`, text: item.text || item })), nextWeek: [] };
+        }
+        return {
+          thisWeek: Array.isArray(incoming.thisWeek) ? incoming.thisWeek : [],
+          nextWeek: Array.isArray(incoming.nextWeek) ? incoming.nextWeek : [],
+        };
+      };
+
+      const mergeFamily = (baseFamily, incoming) => {
+        if (!Array.isArray(incoming)) return baseFamily;
+        return baseFamily.map((member) => {
+          const match = incoming.find((item) => item.name === member.name);
+          return match ? { ...member, ...match } : member;
+        });
+      };
+
+      const loadState = () => {
+        for (const key of STORAGE_KEYS) {
+          const raw = localStorage.getItem(key);
+          if (!raw) continue;
+          try {
+            const data = JSON.parse(raw);
+            return mergeState(defaultState, data);
+          } catch (error) {
+            continue;
+          }
+        }
+        return { ...defaultState };
+      };
+
+      const state = loadState();
+      let saveTimer;
+      const scheduleSave = () => {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+          localStorage.setItem(STORAGE_KEYS[0], JSON.stringify(state));
+        }, 200);
+      };
+
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          tabs.forEach((btn) => btn.classList.remove("active"));
+          tab.classList.add("active");
+          const target = tab.dataset.tab;
+          screens.forEach((screen) => {
+            screen.classList.toggle("active", screen.dataset.screen === target);
+          });
+        });
+      });
+
+      const updateClock = () => {
+        const now = new Date();
+        const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const date = now.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
+        byId("timePill").textContent = time;
+        byId("timeLine").textContent = time;
+        byId("dateLine").textContent = date;
+      };
+
+      const updateStatus = () => {
+        byId("signalCount").textContent = `${state.pings.length} live / ${state.parking.length} parked`;
+        byId("statusLine").textContent = `Signals online: ${state.pings.length} live, ${state.parking.length} parked.`;
+      };
+
+      const renderChecklist = (items, containerId) => {
+        const list = byId(containerId);
+        list.innerHTML = "";
+        items.forEach((item) => {
+          const row = document.createElement("label");
+          row.className = "check-row";
+          row.innerHTML = `<span>${item.text}</span><input type="checkbox" ${item.done ? "checked" : ""} />`;
+          row.querySelector("input").addEventListener("change", (event) => {
+            item.done = event.target.checked;
+            scheduleSave();
+          });
+          list.appendChild(row);
+        });
+      };
+
+      const renderFocus = () => {
+        renderChecklist(state.focus, "focusList");
+      };
+
+      byId("focusAdd").addEventListener("click", () => {
+        const input = byId("focusInput");
+        const value = input.value.trim();
+        if (!value || state.focus.length >= state.focusMax) return;
+        state.focus.push({ text: value, done: false });
+        input.value = "";
+        renderFocus();
+        scheduleSave();
+      });
+
+      const renderUpcoming = () => {
+        const renderList = (items, containerId) => {
+          const container = byId(containerId);
+          container.innerHTML = "";
+          items.forEach((item) => {
+            const row = document.createElement("div");
+            row.className = "list-item";
+            row.innerHTML = `<div class="list-text"><span class="list-title">${item.text}</span></div>`;
+            container.appendChild(row);
+          });
+        };
+        renderList(state.upcoming.thisWeek, "upcomingThisWeek");
+        renderList(state.upcoming.nextWeek, "upcomingNextWeek");
+        renderList(state.upcoming.thisWeek, "upcomingThisWeekHome");
+        renderList(state.upcoming.nextWeek, "upcomingNextWeekHome");
+      };
+
+      const addUpcoming = (inputId, bucketId) => {
+        const input = byId(inputId);
+        const value = input.value.trim();
+        if (!value) return;
+        const bucket = byId(bucketId).value;
+        state.upcoming[bucket].push({ id: crypto.randomUUID(), text: value });
+        input.value = "";
+        renderUpcoming();
+        scheduleSave();
+      };
+
+      byId("upcomingAdd").addEventListener("click", () => addUpcoming("upcomingInput", "upcomingBucket"));
+      byId("upcomingAddHome").addEventListener("click", () => addUpcoming("upcomingInputHome", "upcomingBucketHome"));
+
+      const renderFamily = () => {
+        const buildList = (containerId) => {
+          const list = byId(containerId);
+          list.innerHTML = "";
+          state.family.forEach((member) => {
+            const row = document.createElement("div");
+            row.className = "list-item";
+            row.dataset.type = "person";
+            row.dataset.name = member.name;
+            row.innerHTML = `
+              <div class="list-text">
+                <span class="list-title">${member.name}</span>
+                <span class="list-subtitle">${member.summary}</span>
+              </div>
+              <span class="pill warm">${member.role}</span>
+            `;
+            row.addEventListener("click", () => openSheet("person", member));
+            list.appendChild(row);
+          });
+        };
+        buildList("familyList");
+        buildList("familyListHome");
+      };
+
+      const renderGroupedList = (items, containerId, type) => {
+        const container = byId(containerId);
+        container.innerHTML = "";
+        const groups = items.reduce((acc, item) => {
+          const key = item.group || "General";
+          acc[key] = acc[key] || [];
+          acc[key].push(item);
+          return acc;
+        }, {});
+        Object.keys(groups).forEach((group) => {
+          const tag = document.createElement("div");
+          tag.className = "tag";
+          tag.textContent = group;
+          container.appendChild(tag);
+          groups[group].forEach((item) => {
+            const row = document.createElement("div");
+            row.className = "list-item";
+            if (type === "ping") {
+              row.innerHTML = `
+                <div class="list-text">
+                  <span class="list-title">${item.title}</span>
+                  <span class="list-subtitle">${item.subtitle || ""}</span>
+                </div>
+                <span class="pill teal">${item.threadStatus || ""}</span>
+              `;
+            } else {
+              row.innerHTML = `
+                <div class="list-text">
+                  <span class="list-title">${item.title}</span>
+                  <span class="list-subtitle">${item.vibe || ""}</span>
+                </div>
+                <span class="pill amber">${item.king || ""}</span>
+              `;
+            }
+            row.addEventListener("click", () => openSheet(type, item));
+            container.appendChild(row);
+          });
+        });
+      };
+
+      byId("parkingAdd").addEventListener("click", () => {
+        const title = byId("parkingInput").value.trim();
+        if (!title) return;
+        const vibe = byId("parkingVibe").value.trim();
+        const king = byId("parkingKing").value;
+        const item = {
+          id: crypto.randomUUID(),
+          title,
+          vibe,
+          group: king,
+          king,
+          notes: "",
+        };
+        state.parking.unshift(item);
+        byId("parkingInput").value = "";
+        byId("parkingVibe").value = "";
+        renderGroupedList(state.parking, "parkingList", "parking");
+        updateStatus();
+        scheduleSave();
+      });
+
+      byId("pingAdd").addEventListener("click", () => {
+        const title = byId("pingInput").value.trim();
+        if (!title) return;
+        const group = byId("pingGroup").value;
+        const item = {
+          id: crypto.randomUUID(),
+          title: title.toUpperCase(),
+          subtitle: "",
+          group,
+          threadStatus: "REACH OUT",
+          notes: "",
+        };
+        state.pings.unshift(item);
+        byId("pingInput").value = "";
+        renderGroupedList(state.pings, "pingList", "ping");
+        updateStatus();
+        scheduleSave();
+      });
+
+      byId("jobAdd").addEventListener("click", () => {
+        const title = byId("jobInput").value.trim();
+        if (!title) return;
+        const item = {
+          id: crypto.randomUUID(),
+          title: title.toUpperCase(),
+          subtitle: "Active job track",
+          status: "Working toward a clean close-out.",
+          watchpoints: [],
+          nextAction: "Capture next action and stay clean.",
+        };
+        state.jobs.unshift(item);
+        byId("jobInput").value = "";
+        renderJobList();
+        scheduleSave();
+      });
+
+      const renderJobList = () => {
+        const list = byId("jobList");
+        list.innerHTML = "";
+        state.jobs.forEach((job) => {
+          const row = document.createElement("div");
+          row.className = "list-item";
+          row.innerHTML = `
+            <div class="list-text">
+              <span class="list-title">${job.title}</span>
+              <span class="list-subtitle">${job.subtitle || ""}</span>
+            </div>
+            <span class="pill">Work</span>
+          `;
+          row.addEventListener("click", () => openSheet("job", job));
+          list.appendChild(row);
+        });
+      };
+
+      const renderMoneySummary = () => {
+        const weekList = byId("moneyWeekList");
+        const watchList = byId("moneyWatchList");
+        weekList.innerHTML = "";
+        watchList.innerHTML = "";
+        state.money.summaryWeek.forEach((item) => {
+          const row = document.createElement("li");
+          row.className = "list-item";
+          row.innerHTML = `<div class="list-text"><span class="list-title">${item}</span></div>`;
+          weekList.appendChild(row);
+        });
+        state.money.summaryWatch.forEach((item) => {
+          const row = document.createElement("li");
+          row.className = "list-item";
+          row.innerHTML = `<div class="list-text"><span class="list-title">${item}</span></div>`;
+          watchList.appendChild(row);
+        });
+        const locked = !state.money.unlocked;
+        byId("moneyStatus").textContent = locked ? "LOCKED" : "UNLOCKED";
+        byId("moneyStatusMore").textContent = locked ? "LOCKED" : "UNLOCKED";
+        byId("moneyPulseText").textContent = locked ? "Pulse data locked." : "Pulse unlocked.";
+        byId("moneySummary").classList.toggle("locked", locked);
+      };
+
+      const renderHomeChecklist = () => {
+        renderChecklist(state.homeChecklist, "homeChecklist");
+        renderChecklist(state.homeChecklist, "homeChecklistHome");
+      };
+
+      const addHomeChecklistItem = (inputId) => {
+        const input = byId(inputId);
+        const value = input.value.trim();
+        if (!value) return;
+        state.homeChecklist.push({ text: value, done: false });
+        input.value = "";
+        renderHomeChecklist();
+        scheduleSave();
+      };
+
+      byId("homeChecklistAdd").addEventListener("click", () => addHomeChecklistItem("homeChecklistInput"));
+      byId("homeChecklistAddHome").addEventListener("click", () => addHomeChecklistItem("homeChecklistInputHome"));
+
+      const setTextArea = (id, getValue, setValue) => {
+        byId(id).value = getValue() || "";
+        byId(id).addEventListener("input", (event) => {
+          setValue(event.target.value);
+          scheduleSave();
+        });
+      };
+
+      const openSheet = (type, item) => {
+        sheetBackdrop.dataset.type = type;
+        sheetBackdrop.dataset.id = item?.id || item?.name || "";
+        sheetTitle.textContent = item?.title || item?.name || "Details";
+        sheetSubtitle.textContent = item?.subtitle || item?.role || "";
+        document.querySelectorAll(".sheet-section").forEach((section) => {
+          section.classList.toggle("active", section.dataset.sheet === type);
+        });
+
+        if (type === "ping") {
+          sheetTitle.textContent = `PING - ${item.title}`;
+          sheetSubtitle.textContent = item.subtitle || "";
+          const notesField = byId("pingNotes");
+          notesField.value = item.notes || "";
+          notesField.oninput = (event) => {
+            item.notes = event.target.value;
+            scheduleSave();
+          };
+          byId("pingStatus").querySelectorAll("button").forEach((btn) => {
+            btn.classList.toggle("active", btn.dataset.status === item.threadStatus);
+            btn.onclick = () => {
+              item.threadStatus = btn.dataset.status;
+              renderGroupedList(state.pings, "pingList", "ping");
+              scheduleSave();
+              byId("pingStatus").querySelectorAll("button").forEach((inner) => {
+                inner.classList.toggle("active", inner.dataset.status === item.threadStatus);
+              });
+            };
+          });
+        }
+
+        if (type === "person") {
+          byId("personPresence").textContent = item.presence || "";
+          const recent = byId("personRecent");
+          recent.innerHTML = "";
+          (item.recent || []).forEach((text) => {
+            const row = document.createElement("li");
+            row.className = "list-item";
+            row.innerHTML = `<div class="list-text"><span class="list-title">${text}</span></div>`;
+            recent.appendChild(row);
+          });
+          const needs = byId("personNeeds");
+          needs.innerHTML = "";
+          (item.needs || []).forEach((text) => {
+            const row = document.createElement("li");
+            row.className = "list-item";
+            row.innerHTML = `<div class="list-text"><span class="list-title">${text}</span></div>`;
+            needs.appendChild(row);
+          });
+          byId("personNext").textContent = item.next || "";
+        }
+
+        if (type === "job") {
+          sheetTitle.textContent = item.title;
+          sheetSubtitle.textContent = item.subtitle || "";
+          byId("jobStatus").textContent = item.status || "";
+          const watchpoints = byId("jobWatchpoints");
+          watchpoints.innerHTML = "";
+          (item.watchpoints || []).forEach((text) => {
+            const row = document.createElement("li");
+            row.className = "list-item";
+            row.innerHTML = `<div class="list-text"><span class="list-title">${text}</span></div>`;
+            watchpoints.appendChild(row);
+          });
+          byId("jobNext").textContent = item.nextAction || "";
+        }
+
+        if (type === "parking") {
+          sheetTitle.textContent = `PARKING LOT - ${item.title}`;
+          sheetSubtitle.textContent = "";
+          byId("parkingKingDetail").textContent = item.king || "";
+          byId("parkingVibeDetail").textContent = item.vibe || "";
+          const notesField = byId("parkingNotes");
+          notesField.value = item.notes || "";
+          notesField.oninput = (event) => {
+            item.notes = event.target.value;
+            scheduleSave();
+          };
+        }
+
+        if (type === "money") {
+          sheetTitle.textContent = "MONEY PULSE - DASHBOARD";
+          sheetSubtitle.textContent = "Weekly flow, buffers, and bills.";
+          const weeklyFlow = byId("moneyWeeklyFlow");
+          const buffers = byId("moneyBuffers");
+          const billInput = byId("moneyBillInput");
+          weeklyFlow.value = state.money.weeklyFlow || "";
+          buffers.value = state.money.buffers || "";
+          weeklyFlow.disabled = !state.money.unlocked;
+          buffers.disabled = !state.money.unlocked;
+          billInput.value = "";
+          billInput.disabled = !state.money.unlocked;
+          weeklyFlow.oninput = (event) => {
+            state.money.weeklyFlow = event.target.value;
+            scheduleSave();
+          };
+          buffers.oninput = (event) => {
+            state.money.buffers = event.target.value;
+            scheduleSave();
+          };
+          renderMoneyBills();
+        }
+
+        if (type === "debrief") {
+          sheetTitle.textContent = "ROOK DEBRIEF";
+          sheetSubtitle.textContent = "";
+          const notesField = byId("rookNotes");
+          notesField.value = state.rookDebrief || "";
+          notesField.oninput = (event) => {
+            state.rookDebrief = event.target.value;
+            scheduleSave();
+          };
+        }
+
+        sheetBackdrop.classList.add("active");
+      };
+
+      const renderMoneyBills = () => {
+        const container = byId("moneyBills");
+        container.innerHTML = "";
+        state.money.bills.forEach((bill) => {
+          const row = document.createElement("div");
+          row.className = "list-item";
+          row.innerHTML = `<div class="list-text"><span class="list-title">${bill}</span></div>`;
+          container.appendChild(row);
+        });
+      };
+
+      const closeSheet = () => {
+        sheetBackdrop.classList.remove("active");
+        sheetBackdrop.dataset.type = "";
+        sheetBackdrop.dataset.id = "";
+      };
+
+      byId("sheetClose").addEventListener("click", closeSheet);
+      sheetBackdrop.addEventListener("click", (event) => {
+        if (event.target === sheetBackdrop) closeSheet();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeSheet();
+      });
+
+      sheetCopy.addEventListener("click", () => {
+        const type = sheetBackdrop.dataset.type;
+        let payload = "";
+        if (type === "ping") {
+          const item = state.pings.find((ping) => ping.id === sheetBackdrop.dataset.id || ping.title === sheetBackdrop.dataset.id);
+          payload = item ? `${item.title} - ${item.subtitle}` : "";
+        } else if (type === "person") {
+          const item = state.family.find((member) => member.name === sheetBackdrop.dataset.id);
+          payload = item ? `${item.name} - ${item.summary}` : "";
+        } else if (type === "job") {
+          const item = state.jobs.find((job) => job.id === sheetBackdrop.dataset.id);
+          payload = item ? `${item.title} - ${item.status}` : "";
+        } else if (type === "parking") {
+          const item = state.parking.find((park) => park.id === sheetBackdrop.dataset.id);
+          payload = item ? `${item.title} - ${item.vibe}` : "";
+        } else if (type === "money") {
+          payload = "Money Pulse - Dashboard";
+        } else if (type === "debrief") {
+          payload = state.rookDebrief || "Rook Debrief";
+        }
+        if (payload) navigator.clipboard?.writeText(payload);
+      });
+
+      byId("copyStandards").addEventListener("click", () => {
+        const text = byId("standardsNotes").value.trim();
+        if (!text) return;
+        navigator.clipboard?.writeText(text);
+      });
+
+      byId("moneyOpen").addEventListener("click", () => openSheet("money", {}));
+      byId("moneyOpenMore").addEventListener("click", () => openSheet("money", {}));
+      byId("moneyUnlock").addEventListener("click", () => {
+        state.money.unlocked = !state.money.unlocked;
+        renderMoneySummary();
+        scheduleSave();
+      });
+
+      byId("moneyAddBill").addEventListener("click", () => {
+        if (!state.money.unlocked) return;
+        const input = byId("moneyBillInput");
+        const bill = input.value.trim();
+        if (!bill) return;
+        state.money.bills.push(bill);
+        input.value = "";
+        renderMoneyBills();
+        scheduleSave();
+      });
+
+      byId("rookDebrief").addEventListener("click", () => openSheet("debrief", {}));
+
+      document.querySelectorAll(".mini-toggle").forEach((toggle) => {
+        toggle.addEventListener("click", () => {
+          const key = toggle.dataset.toggle;
+          if (key.startsWith("recovery-")) {
+            const type = key.replace("recovery-", "");
+            state.recovery[type] = !state.recovery[type];
+            toggle.classList.toggle("active", state.recovery[type]);
+          } else {
+            state.bodyToggles[key] = !state.bodyToggles[key];
+            toggle.classList.toggle("active", state.bodyToggles[key]);
+          }
+          scheduleSave();
+        });
+      });
+
+      byId("workoutSegment").querySelectorAll("button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.workout = btn.dataset.value;
+          byId("workoutSegment").querySelectorAll("button").forEach((other) => {
+            other.classList.toggle("active", other.dataset.value === state.workout);
+          });
+          scheduleSave();
+        });
+      });
+
+      byId("calorieGoal").addEventListener("input", (event) => {
+        state.calorieGoal = event.target.value;
+        scheduleSave();
+      });
+
+      setTextArea("standardsNotes", () => state.standardsNotes, (value) => (state.standardsNotes = value));
+      setTextArea("mindsetNotes", () => state.mindsetNotes, (value) => (state.mindsetNotes = value));
+      setTextArea("systemsNotes", () => state.systemsNotes, (value) => (state.systemsNotes = value));
+
+      updateClock();
+      updateStatus();
+      renderFocus();
+      renderHomeChecklist();
+      renderUpcoming();
+      renderFamily();
+      renderGroupedList(state.parking, "parkingList", "parking");
+      renderGroupedList(state.pings, "pingList", "ping");
+      renderJobList();
+      renderChecklist(state.fuel, "fuelList");
+      renderMoneySummary();
+
+      byId("calorieGoal").value = state.calorieGoal || "";
+      byId("workoutSegment").querySelectorAll("button").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.value === state.workout);
+      });
+
+      document.querySelectorAll(".mini-toggle").forEach((toggle) => {
+        const key = toggle.dataset.toggle;
+        if (key.startsWith("recovery-")) {
+          const type = key.replace("recovery-", "");
+          toggle.classList.toggle("active", state.recovery[type]);
+        } else {
+          toggle.classList.toggle("active", state.bodyToggles[key]);
+        }
+      });
+
+      setInterval(updateClock, 1000 * 30);
+    </script>
+  </body>
+</html>

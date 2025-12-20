@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>STACK OS v0_3</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=Space+Grotesk:wght@400;600&display=swap");
+
+      :root {
+        color-scheme: dark;
+        --bg: #080b12;
+        --panel: rgba(12, 16, 26, 0.9);
+        --panel-strong: rgba(16, 22, 34, 0.95);
+        --text: #eef2ff;
+        --muted: #9aa6bf;
+        --teal: #4fffdc;
+        --teal-strong: #14b8c8;
+        --amber: #ffb251;
+        --amber-strong: #ff7a2f;
+        --purple: #b785ff;
+        --line: rgba(255, 255, 255, 0.08);
+        --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+        --radius: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Sora", "Space Grotesk", system-ui, sans-serif;
+        background:
+          radial-gradient(900px 500px at 15% 10%, rgba(20, 184, 200, 0.12), transparent 60%),
+          radial-gradient(700px 450px at 85% 15%, rgba(255, 122, 47, 0.12), transparent 55%),
+          linear-gradient(180deg, #06080d 0%, #090c14 55%, #080b12 100%);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      .app {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 16px 92px;
+        gap: 16px;
+      }
+
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .brand {
+        font-family: "Space Grotesk", "Sora", sans-serif;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+
+      .signal-pill {
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(79, 255, 220, 0.1);
+        border: 1px solid rgba(79, 255, 220, 0.25);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--teal);
+      }
+
+      .screen {
+        display: none;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .screen.active {
+        display: flex;
+      }
+
+      .card {
+        position: relative;
+        padding: 16px;
+        border-radius: var(--radius);
+        background: linear-gradient(160deg, rgba(20, 26, 40, 0.92), rgba(10, 13, 21, 0.92));
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+        overflow: hidden;
+      }
+
+      .card.teal {
+        border-color: rgba(79, 255, 220, 0.35);
+        box-shadow: var(--shadow), inset 0 0 0 1px rgba(79, 255, 220, 0.18);
+      }
+
+      .card.amber {
+        border-color: rgba(255, 178, 81, 0.35);
+        box-shadow: var(--shadow), inset 0 0 0 1px rgba(255, 178, 81, 0.18);
+      }
+
+      .card.purple {
+        border-color: rgba(183, 133, 255, 0.3);
+        box-shadow: var(--shadow), inset 0 0 0 1px rgba(183, 133, 255, 0.16);
+      }
+
+      .card-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-weight: 600;
+        font-size: 0.98rem;
+        margin-bottom: 10px;
+      }
+
+      .subtle {
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      .pill {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: var(--muted);
+      }
+
+      .pill.teal {
+        color: var(--teal);
+        background: rgba(79, 255, 220, 0.12);
+        border-color: rgba(79, 255, 220, 0.25);
+      }
+
+      .pill.amber {
+        color: var(--amber);
+        background: rgba(255, 178, 81, 0.12);
+        border-color: rgba(255, 178, 81, 0.25);
+      }
+
+      .pill.purple {
+        color: var(--purple);
+        background: rgba(183, 133, 255, 0.12);
+        border-color: rgba(183, 133, 255, 0.25);
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .stack {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 10px;
+      }
+
+      .grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .ghost-btn,
+      .primary-btn {
+        border: none;
+        padding: 10px 12px;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+      }
+
+      .primary-btn {
+        background: linear-gradient(135deg, rgba(79, 255, 220, 0.4), rgba(20, 184, 200, 0.6));
+        color: #001314;
+        font-weight: 600;
+      }
+
+      .ghost-btn {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(7, 10, 16, 0.8);
+        color: var(--text);
+        font-family: inherit;
+        font-size: 0.85rem;
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 72px;
+      }
+
+      .list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .list-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(11, 15, 24, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        cursor: pointer;
+      }
+
+      .list-item span {
+        font-size: 0.85rem;
+      }
+
+      .tag {
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .toggle {
+        border-radius: 12px;
+        padding: 8px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(7, 10, 16, 0.75);
+        color: var(--muted);
+        font-size: 0.78rem;
+        text-align: center;
+        cursor: pointer;
+      }
+
+      .toggle.active {
+        color: #001312;
+        background: linear-gradient(135deg, rgba(79, 255, 220, 0.55), rgba(20, 184, 200, 0.7));
+        border-color: rgba(79, 255, 220, 0.4);
+      }
+
+      .toggle.amber.active {
+        background: linear-gradient(135deg, rgba(255, 178, 81, 0.6), rgba(255, 122, 47, 0.75));
+        border-color: rgba(255, 178, 81, 0.4);
+      }
+
+      .toggle.purple.active {
+        background: linear-gradient(135deg, rgba(183, 133, 255, 0.6), rgba(146, 86, 255, 0.7));
+        border-color: rgba(183, 133, 255, 0.4);
+      }
+
+      .check-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 12px;
+        background: rgba(7, 10, 16, 0.65);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .check-row input {
+        width: 18px;
+        height: 18px;
+        margin: 0;
+      }
+
+      .watermark {
+        position: absolute;
+        inset: 0;
+        opacity: 0.1;
+        pointer-events: none;
+      }
+
+      .watermark svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .tabs {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(7, 10, 16, 0.92);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        padding: 8px 10px 18px;
+        gap: 6px;
+        backdrop-filter: blur(12px);
+      }
+
+      .tab-btn {
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 8px 4px;
+        border-radius: 12px;
+        cursor: pointer;
+      }
+
+      .tab-btn.active {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .sheet-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 16px;
+      }
+
+      .sheet-backdrop.active {
+        display: flex;
+      }
+
+      .sheet {
+        width: min(520px, 100%);
+        background: rgba(11, 15, 24, 0.98);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: var(--shadow);
+      }
+
+      .sheet h3 {
+        margin: 0 0 12px;
+      }
+
+      .sheet .notes {
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .inline-watermark {
+        position: absolute;
+        right: -20px;
+        top: -10px;
+        width: 120px;
+        height: 120px;
+        opacity: 0.12;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(79, 255, 220, 0.4), transparent 70%);
+        pointer-events: none;
+      }
+
+      .inline-watermark.amber {
+        background: radial-gradient(circle, rgba(255, 178, 81, 0.4), transparent 70%);
+      }
+
+      .inline-watermark.purple {
+        background: radial-gradient(circle, rgba(183, 133, 255, 0.4), transparent 70%);
+      }
+
+      @media (min-width: 720px) {
+        .app {
+          max-width: 720px;
+          margin: 0 auto;
+        }
+
+        .tabs {
+          left: 50%;
+          transform: translateX(-50%);
+          width: min(680px, 100%);
+          border-radius: 18px 18px 0 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <div>
+          <div class="brand">Stack OS</div>
+          <div class="subtle" id="statusLine">Night cabin · Signals calm</div>
+        </div>
+        <div class="signal-pill" id="timePill">00:00</div>
+      </header>
+
+      <section class="screen active" data-screen="today">
+        <div class="card">
+          <div class="inline-watermark"></div>
+          <div class="card-title">
+            <span>Command Center</span>
+            <span class="pill teal" id="modePill">Night Mode</span>
+          </div>
+          <div class="row">
+            <div>
+              <div id="dateLine">Today</div>
+              <div class="subtle" id="timeLine">00:00</div>
+            </div>
+            <div class="stack">
+              <span class="pill">Status</span>
+              <span class="subtle" id="signalCount">0 live · 0 parked</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="inline-watermark teal"></div>
+          <div class="card-title">
+            <span>Today’s Focus</span>
+            <span class="pill">Max 3</span>
+          </div>
+          <div class="stack" id="focusList"></div>
+          <div class="row">
+            <input type="text" id="focusInput" placeholder="Add focus item" />
+            <button class="primary-btn" id="focusAdd">Add</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="inline-watermark purple"></div>
+          <div class="card-title">
+            <span>Quick Scan</span>
+            <span class="pill purple">Tap to log</span>
+          </div>
+          <div class="grid two">
+            <button class="toggle" data-toggle="sleep">Sleep</button>
+            <button class="toggle" data-toggle="food">Food</button>
+            <button class="toggle" data-toggle="water">Water</button>
+            <button class="toggle" data-toggle="mood">Mood</button>
+          </div>
+        </div>
+
+        <div class="card amber">
+          <div class="watermark">
+            <svg viewBox="0 0 300 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="amberGlow" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#ffb251" stop-opacity="0.45" />
+                  <stop offset="1" stop-color="#ff7a2f" stop-opacity="0.05" />
+                </linearGradient>
+                <mask id="fadeMask">
+                  <rect width="300" height="160" fill="white" />
+                  <rect y="90" width="300" height="70" fill="black" />
+                </mask>
+              </defs>
+              <rect width="300" height="160" fill="url(#amberGlow)" opacity="0.4" />
+              <g mask="url(#fadeMask)" stroke="#ffb251" stroke-opacity="0.5" stroke-width="2">
+                <path d="M30 110 H270" />
+                <path d="M50 70 H250" />
+                <path d="M60 70 L90 40 H210 L240 70" />
+                <path d="M90 70 V110" />
+                <path d="M210 70 V110" />
+              </g>
+            </svg>
+          </div>
+          <div class="card-title">
+            <span>Parking Lot</span>
+            <span class="pill amber">Queued</span>
+          </div>
+          <div class="stack">
+            <input type="text" id="parkingInput" placeholder="Drop item" />
+            <div class="grid two">
+              <input type="text" id="parkingVibe" placeholder="Vibe (optional)" />
+              <select id="parkingKing">
+                <option value="Self">Self</option>
+                <option value="Steph">Steph</option>
+                <option value="Beck">Beck</option>
+                <option value="Wesley">Wesley</option>
+                <option value="Team">Team</option>
+              </select>
+            </div>
+            <button class="ghost-btn" id="parkingAdd">Add to Parking</button>
+          </div>
+          <div class="stack" id="parkingList"></div>
+        </div>
+
+        <div class="card teal">
+          <div class="watermark">
+            <svg viewBox="0 0 320 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="tealGlow" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#4fffdc" stop-opacity="0.45" />
+                  <stop offset="1" stop-color="#14b8c8" stop-opacity="0.05" />
+                </linearGradient>
+                <mask id="fadeMaskTeal">
+                  <rect width="320" height="160" fill="white" />
+                  <rect y="85" width="320" height="75" fill="black" />
+                </mask>
+              </defs>
+              <rect width="320" height="160" fill="url(#tealGlow)" opacity="0.4" />
+              <g mask="url(#fadeMaskTeal)" stroke="#4fffdc" stroke-opacity="0.5" stroke-width="2">
+                <path d="M20 110 H300" />
+                <path d="M50 90 L60 60 L80 90" />
+                <path d="M120 100 L130 70 L150 100" />
+                <path d="M190 105 L200 65 L220 105" />
+                <path d="M240 90 L250 60 L270 90" />
+              </g>
+            </svg>
+          </div>
+          <div class="card-title">
+            <span>Pings</span>
+            <span class="pill teal">Live Signals</span>
+          </div>
+          <div class="stack">
+            <input type="text" id="pingInput" placeholder="Quick add ping" />
+            <div class="grid two">
+              <select id="pingGroup">
+                <option value="People">People</option>
+                <option value="Comms">Comms</option>
+                <option value="Systems">Systems</option>
+              </select>
+              <button class="ghost-btn" id="pingAdd">Add Ping</button>
+            </div>
+          </div>
+          <div class="stack" id="pingList"></div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="work">
+        <div class="card">
+          <div class="inline-watermark"></div>
+          <div class="card-title">
+            <span>Jobs</span>
+            <span class="pill">Tap for details</span>
+          </div>
+          <div class="stack">
+            <input type="text" id="jobInput" placeholder="Add job" />
+            <button class="ghost-btn" id="jobAdd">Add Job</button>
+          </div>
+          <div class="stack" id="jobList"></div>
+        </div>
+
+        <div class="card teal">
+          <div class="inline-watermark"></div>
+          <div class="card-title">
+            <span>Standards / Notes</span>
+            <span class="pill teal">Copy</span>
+          </div>
+          <textarea id="standardsNotes" placeholder="Capture standards or quick notes"></textarea>
+          <div class="row">
+            <span class="subtle">Quick copy to clipboard</span>
+            <button class="ghost-btn" id="copyStandards">Copy</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="home">
+        <div class="card">
+          <div class="inline-watermark amber"></div>
+          <div class="card-title">
+            <span>Family Focus</span>
+            <span class="pill amber">Quick notes</span>
+          </div>
+          <div class="stack" id="familyList"></div>
+        </div>
+
+        <div class="card">
+          <div class="inline-watermark"></div>
+          <div class="card-title">
+            <span>Before Heading Home</span>
+            <span class="pill">Checklist</span>
+          </div>
+          <div class="stack" id="homeChecklist"></div>
+        </div>
+
+        <div class="card teal">
+          <div class="inline-watermark"></div>
+          <div class="card-title">
+            <span>Upcoming</span>
+            <span class="pill teal">Strip</span>
+          </div>
+          <div class="stack">
+            <input type="text" id="upcomingInput" placeholder="Add upcoming" />
+            <button class="ghost-btn" id="upcomingAdd">Add</button>
+          </div>
+          <div class="stack" id="upcomingList"></div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="body">
+        <div class="card">
+          <div class="inline-watermark purple"></div>
+          <div class="card-title">
+            <span>Recovery</span>
+            <span class="pill purple">Tap</span>
+          </div>
+          <div class="grid three">
+            <button class="toggle" data-toggle="recovery-sleep">Sleep</button>
+            <button class="toggle amber" data-toggle="recovery-joints">Joints</button>
+            <button class="toggle" data-toggle="recovery-training">Training</button>
+          </div>
+        </div>
+
+        <div class="card teal">
+          <div class="inline-watermark"></div>
+          <div class="card-title">
+            <span>Fuel</span>
+            <span class="pill teal">Checklist</span>
+          </div>
+          <div class="stack" id="fuelList"></div>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="more">
+        <div class="card">
+          <div class="inline-watermark purple"></div>
+          <div class="card-title">
+            <span>Mindset</span>
+            <span class="pill purple">Focus</span>
+          </div>
+          <textarea id="mindsetNotes" placeholder="Quick mindset note"></textarea>
+        </div>
+
+        <div class="card">
+          <div class="inline-watermark"></div>
+          <div class="card-title">
+            <span>Stack / Systems</span>
+            <span class="pill">Tune-up</span>
+          </div>
+          <textarea id="systemsNotes" placeholder="Systems checks and notes"></textarea>
+        </div>
+
+        <div class="card amber">
+          <div class="inline-watermark amber"></div>
+          <div class="card-title">
+            <span>Money Pulse</span>
+            <span class="pill amber" id="moneyStatus">Locked</span>
+          </div>
+          <div class="row">
+            <span class="subtle" id="moneyPulseText">Pulse data locked.</span>
+            <button class="ghost-btn" id="moneyUnlock">Unlock</button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="today">Today</button>
+      <button class="tab-btn" data-tab="work">Work</button>
+      <button class="tab-btn" data-tab="home">Home</button>
+      <button class="tab-btn" data-tab="body">Body</button>
+      <button class="tab-btn" data-tab="more">More</button>
+    </nav>
+
+    <div class="sheet-backdrop" id="sheetBackdrop">
+      <div class="sheet" role="dialog" aria-modal="true">
+        <div class="row">
+          <h3 id="sheetTitle">Details</h3>
+          <button class="ghost-btn" id="sheetClose">Close</button>
+        </div>
+        <div class="stack">
+          <span class="pill" id="sheetKing">King</span>
+          <p class="notes" id="sheetNotes">Notes</p>
+          <div class="stack" id="sheetChecklist"></div>
+          <button class="primary-btn" id="sheetCopy">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const state = {
+        focus: [],
+        focusMax: 3,
+        quickScan: {},
+        parking: [],
+        pings: [],
+        jobs: [],
+        family: [
+          { name: "Steph", note: "" },
+          { name: "Beck", note: "" },
+          { name: "Wesley", note: "" },
+        ],
+        homeChecklist: ["Water", "Protein", "10-min reset", "Quick tidy", "Connect with Steph"],
+        upcoming: [],
+        fuel: ["Protein", "Water"],
+        moneyUnlocked: false,
+      };
+
+      const byId = (id) => document.getElementById(id);
+
+      const screens = document.querySelectorAll(".screen");
+      const tabs = document.querySelectorAll(".tab-btn");
+
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          tabs.forEach((btn) => btn.classList.remove("active"));
+          tab.classList.add("active");
+          const target = tab.dataset.tab;
+          screens.forEach((screen) => {
+            screen.classList.toggle("active", screen.dataset.screen === target);
+          });
+        });
+      });
+
+      const updateClock = () => {
+        const now = new Date();
+        const time = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const date = now.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
+        byId("timePill").textContent = time;
+        byId("timeLine").textContent = time;
+        byId("dateLine").textContent = date;
+      };
+
+      const updateStatus = () => {
+        byId("signalCount").textContent = `${state.pings.length} live · ${state.parking.length} parked`;
+        byId("statusLine").textContent = `Night cabin · ${state.pings.length} signals · ${state.parking.length} parked`;
+      };
+
+      const renderFocus = () => {
+        const list = byId("focusList");
+        list.innerHTML = "";
+        state.focus.forEach((item) => {
+          const row = document.createElement("label");
+          row.className = "check-row";
+          row.innerHTML = `<span>${item.text}</span><input type="checkbox" ${item.done ? "checked" : ""} />`;
+          row.querySelector("input").addEventListener("change", (event) => {
+            item.done = event.target.checked;
+          });
+          list.appendChild(row);
+        });
+      };
+
+      byId("focusAdd").addEventListener("click", () => {
+        const input = byId("focusInput");
+        if (!input.value.trim() || state.focus.length >= state.focusMax) return;
+        state.focus.push({ text: input.value.trim(), done: false });
+        input.value = "";
+        renderFocus();
+      });
+
+      document.querySelectorAll(".toggle").forEach((toggle) => {
+        toggle.addEventListener("click", () => {
+          toggle.classList.toggle("active");
+        });
+      });
+
+      const renderGroupedList = (items, containerId) => {
+        const container = byId(containerId);
+        container.innerHTML = "";
+        const groups = items.reduce((acc, item) => {
+          const key = item.group || "General";
+          acc[key] = acc[key] || [];
+          acc[key].push(item);
+          return acc;
+        }, {});
+        Object.keys(groups).forEach((group) => {
+          const tag = document.createElement("div");
+          tag.className = "tag";
+          tag.textContent = group;
+          container.appendChild(tag);
+          groups[group].forEach((item) => {
+            const row = document.createElement("div");
+            row.className = "list-item";
+            row.innerHTML = `<span>${item.title}</span><span class="subtle">${item.vibe || ""}</span>`;
+            row.addEventListener("click", () => openSheet(item));
+            container.appendChild(row);
+          });
+        });
+      };
+
+      byId("parkingAdd").addEventListener("click", () => {
+        const title = byId("parkingInput").value.trim();
+        if (!title) return;
+        const vibe = byId("parkingVibe").value.trim();
+        const king = byId("parkingKing").value;
+        const item = { id: crypto.randomUUID(), title, vibe, group: king, king, notes: "", checklist: [] };
+        state.parking.unshift(item);
+        byId("parkingInput").value = "";
+        byId("parkingVibe").value = "";
+        renderGroupedList(state.parking, "parkingList");
+        updateStatus();
+      });
+
+      byId("pingAdd").addEventListener("click", () => {
+        const title = byId("pingInput").value.trim();
+        if (!title) return;
+        const group = byId("pingGroup").value;
+        const item = { id: crypto.randomUUID(), title, group, king: group, notes: "", checklist: [] };
+        state.pings.unshift(item);
+        byId("pingInput").value = "";
+        renderGroupedList(state.pings, "pingList");
+        updateStatus();
+      });
+
+      byId("jobAdd").addEventListener("click", () => {
+        const title = byId("jobInput").value.trim();
+        if (!title) return;
+        const item = { id: crypto.randomUUID(), title, group: "Job", king: "Work", notes: "Tap to add notes", checklist: [] };
+        state.jobs.unshift(item);
+        byId("jobInput").value = "";
+        renderJobList();
+      });
+
+      const renderJobList = () => {
+        const list = byId("jobList");
+        list.innerHTML = "";
+        state.jobs.forEach((job) => {
+          const row = document.createElement("div");
+          row.className = "list-item";
+          row.innerHTML = `<span>${job.title}</span><span class="subtle">Work</span>`;
+          row.addEventListener("click", () => openSheet(job));
+          list.appendChild(row);
+        });
+      };
+
+      const renderFamily = () => {
+        const list = byId("familyList");
+        list.innerHTML = "";
+        state.family.forEach((member) => {
+          const row = document.createElement("div");
+          row.className = "stack";
+          row.innerHTML = `
+            <div class="row">
+              <span>${member.name}</span>
+              <span class="pill">Family</span>
+            </div>
+            <input type="text" placeholder="Quick note" value="${member.note}" />
+          `;
+          row.querySelector("input").addEventListener("input", (event) => {
+            member.note = event.target.value;
+          });
+          list.appendChild(row);
+        });
+      };
+
+      const renderChecklist = (items, containerId) => {
+        const list = byId(containerId);
+        list.innerHTML = "";
+        items.forEach((item) => {
+          const row = document.createElement("label");
+          row.className = "check-row";
+          row.innerHTML = `<span>${item}</span><input type="checkbox" />`;
+          list.appendChild(row);
+        });
+      };
+
+      byId("upcomingAdd").addEventListener("click", () => {
+        const title = byId("upcomingInput").value.trim();
+        if (!title) return;
+        state.upcoming.unshift({ id: crypto.randomUUID(), title, group: "Upcoming", king: "Home", notes: "" });
+        byId("upcomingInput").value = "";
+        renderUpcoming();
+      });
+
+      const renderUpcoming = () => {
+        const list = byId("upcomingList");
+        list.innerHTML = "";
+        state.upcoming.forEach((item) => {
+          const row = document.createElement("div");
+          row.className = "list-item";
+          row.innerHTML = `<span>${item.title}</span><span class="subtle">Soon</span>`;
+          row.addEventListener("click", () => openSheet(item));
+          list.appendChild(row);
+        });
+      };
+
+      byId("copyStandards").addEventListener("click", () => {
+        const text = byId("standardsNotes").value.trim();
+        if (!text) return;
+        navigator.clipboard?.writeText(text);
+      });
+
+      byId("moneyUnlock").addEventListener("click", () => {
+        state.moneyUnlocked = !state.moneyUnlocked;
+        byId("moneyStatus").textContent = state.moneyUnlocked ? "Unlocked" : "Locked";
+        byId("moneyPulseText").textContent = state.moneyUnlocked
+          ? "Pulse unlocked. No budget data yet."
+          : "Pulse data locked.";
+      });
+
+      const sheetBackdrop = byId("sheetBackdrop");
+      const sheetTitle = byId("sheetTitle");
+      const sheetKing = byId("sheetKing");
+      const sheetNotes = byId("sheetNotes");
+      const sheetChecklist = byId("sheetChecklist");
+
+      const openSheet = (item) => {
+        sheetTitle.textContent = item.title;
+        sheetKing.textContent = item.king || "General";
+        sheetNotes.textContent = item.notes || "No notes yet.";
+        sheetChecklist.innerHTML = "";
+        if (item.checklist && item.checklist.length) {
+          item.checklist.forEach((entry) => {
+            const row = document.createElement("div");
+            row.className = "check-row";
+            row.innerHTML = `<span>${entry}</span><input type="checkbox" />`;
+            sheetChecklist.appendChild(row);
+          });
+        }
+        sheetBackdrop.classList.add("active");
+        sheetBackdrop.dataset.item = JSON.stringify(item);
+      };
+
+      const closeSheet = () => {
+        sheetBackdrop.classList.remove("active");
+        sheetBackdrop.dataset.item = "";
+      };
+
+      byId("sheetClose").addEventListener("click", closeSheet);
+      sheetBackdrop.addEventListener("click", (event) => {
+        if (event.target === sheetBackdrop) closeSheet();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeSheet();
+      });
+
+      byId("sheetCopy").addEventListener("click", () => {
+        if (!sheetBackdrop.dataset.item) return;
+        const item = JSON.parse(sheetBackdrop.dataset.item);
+        const payload = [item.title, item.king, item.notes].filter(Boolean).join(" - ");
+        navigator.clipboard?.writeText(payload);
+      });
+
+      updateClock();
+      updateStatus();
+      renderFocus();
+      renderGroupedList(state.parking, "parkingList");
+      renderGroupedList(state.pings, "pingList");
+      renderJobList();
+      renderFamily();
+      renderChecklist(state.homeChecklist, "homeChecklist");
+      renderChecklist(state.fuel, "fuelList");
+      renderUpcoming();
+      setInterval(updateClock, 1000 * 30);
+    </script>
+  </body>
+</html>
